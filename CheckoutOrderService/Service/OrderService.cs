@@ -61,6 +61,33 @@ namespace CheckoutOrderService
         }
 
         /// <inheritdoc />
+        public ServiceResponse ClearOrder(int id)
+        {
+            try
+            {
+                var orderResponse = GetOrder(id);
+                if (!orderResponse.IsSuccessful)
+                {
+                    return new ServiceResponse(orderResponse.ServiceError, orderResponse.ErrorMessages.ToArray());
+                }
+                var order = orderResponse.Data;
+                if (order.Lines == null || !order.Lines.Any())
+                {
+                    return new ServiceResponse();
+                }
+                order.Lines.Clear();
+                _repository.Save(order);
+                return new ServiceResponse();
+            }
+            catch (Exception e)
+            {
+                var publicErrorMessage = $"Error clearing order with id {id}";
+                LogError(nameof(ClearOrder), publicErrorMessage, $"{e.Message} StackTrace: {e.StackTrace}");
+                return new ServiceResponse(ServiceError.InternalServerError, publicErrorMessage);
+            }
+        }
+
+        /// <inheritdoc />
         public ServiceResponse<int> UpdateOrderLine(int orderId, OrderLineModel line)
         {
             var publicErrorMessage = $"Error saving order with id {orderId}";

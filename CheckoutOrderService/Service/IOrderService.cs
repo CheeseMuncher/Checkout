@@ -21,6 +21,11 @@ namespace CheckoutOrderService
         ServiceResponse<OrderModel> GetOrder(int id);
 
         /// <summary>
+        /// Removes all order lines for the order corresponding to the supplied id value
+        /// </summary>
+        ServiceResponse ClearOrder(int id);
+
+        /// <summary>
         /// Adds or updates the supplied <see cref="OrderLineModel"/> object to the order corresponding to the supplied order Id 
         /// </summary>
         /// <returns>The persistence identifier for the line</returns>

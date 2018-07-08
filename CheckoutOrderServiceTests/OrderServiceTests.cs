@@ -30,7 +30,8 @@ namespace CheckoutOrderServiceTests
         private string fetchingOrderError = $"Error fetching order with id {orderId}";
         private string savingOrderError = $"Error saving order with id {orderId}";
         private string deletingOrderLineError = $"Error deleting line with {orderLineId} from order with id {orderId}";
-        
+        private string clearingOrderLineError = $"Error clearing order with id {orderId}";
+
         private SkuModel GetSkuModel(int suffix) => new SkuModel($"SkuCode{suffix}", $"Product {suffix}");
 
         private OrderLineModel GetOrderLine(int id) => new OrderLineModel(id, GetSkuModel(id)) { Quantity = 1, SortOrder = 100 };
@@ -275,6 +276,169 @@ namespace CheckoutOrderServiceTests
         }
 
         #endregion GetOrder
+
+        #region ClearOrder
+
+        [TestMethod]
+        public void ClearOrder_FetchesCorrespondingOrder()
+        {
+            // Arrange
+            Expression<Func<OrderModel, bool>> predicate = null;
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Callback((Expression<Func<OrderModel, bool>> exp) => predicate = exp);
+
+            // Act
+            _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsNotNull(predicate);
+
+            var matchingOrder = new OrderModel { Id = orderId };
+            var otherOrder = new OrderModel { Id = orderId + 1 };
+
+            var func = predicate.Compile();
+            Assert.IsTrue(func(matchingOrder));
+            Assert.IsFalse(func(otherOrder));
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsNotFound_IfOrderNotFound()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => null);
+
+            // Act
+            var result = _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.NotFound, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains(orderNotFoundError));
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsInternalServerError_IfOrderGetFails()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Throws(new Exception());
+
+            // Act
+            var result = _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderError));
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsSuccess_IfOrderLinesNull()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => new List<OrderModel> { repoOrder });
+
+            // Act
+            var result = _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsSuccess_IfOrderLinesEmpty()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel>() };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => new List<OrderModel> { repoOrder });
+
+            // Act
+            var result = _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void ClearOrder_SavesOrderWithoutLines_IfOrderContainsLines()
+        {
+            // Arrange
+            var line1 = GetOrderLine(orderLineId);
+            var line2 = GetOrderLine(orderLineId + 1);
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { line1, line2 } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
+
+            OrderModel savePayload = null;
+            _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Callback((OrderModel order) => savePayload = order);
+
+            // Act
+            _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsNotNull(savePayload);
+            Assert.AreEqual(0, savePayload.Lines.Count());
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Once);
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsSuccess_AfterOrderLinesDeleted()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
+
+            // Act
+            var result = _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsInternalServerError_IfExceptionThrown()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
+
+            _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception());
+
+            // Act
+            var result = _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains(clearingOrderLineError));
+        }
+
+        [TestMethod]
+        public void ClearOrder_LogsError_IfExceptionThrown()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
+
+            _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception(exceptionMessage));
+
+            string loggedMessage = null;
+            _mockLogger.Setup(logger => logger.LogError(It.IsAny<string>())).Callback((string str) => loggedMessage = str);
+
+            // Act
+            _target.ClearOrder(orderId);
+
+            // Assert
+            Assert.IsNotNull(loggedMessage);
+            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
+            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.ClearOrder)));
+            Assert.IsTrue(loggedMessage.Contains(clearingOrderLineError));
+            Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
+        }
+
+        #endregion ClearOrder
 
         #region UpdateOrderLine
 
