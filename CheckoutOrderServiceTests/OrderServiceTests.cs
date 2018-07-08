@@ -27,8 +27,8 @@ namespace CheckoutOrderServiceTests
         private const string exceptionMessage = "Exception Message";
         private const string newOrderError = "Error creating new Order";
         private const string orderNotFoundError = "Order not found";
-        private string fetchingOrderNotFoundError = $"Error fetching order with id {orderId}";
-        private string savingOrderNotFoundError = $"Error saving order with id {orderId}";
+        private string fetchingOrderError = $"Error fetching order with id {orderId}";
+        private string savingOrderError = $"Error saving order with id {orderId}";
         private string deletingOrderLineError = $"Error deleting line with {orderLineId} from order with id {orderId}";
         
         private SkuModel GetSkuModel(int suffix) => new SkuModel($"SkuCode{suffix}", $"Product {suffix}");
@@ -197,7 +197,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderNotFoundError));
+            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderError));
         }
 
         [TestMethod]
@@ -218,7 +218,7 @@ namespace CheckoutOrderServiceTests
             Assert.IsNotNull(loggedMessage);
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.GetOrder)));
-            Assert.IsTrue(loggedMessage.Contains(fetchingOrderNotFoundError));
+            Assert.IsTrue(loggedMessage.Contains(fetchingOrderError));
             Assert.IsTrue(loggedMessage.Contains("duplicate matches found"));
             Assert.IsTrue(loggedMessage.Contains("2"));
         }
@@ -251,7 +251,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderNotFoundError));
+            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderError));
         }
 
         [TestMethod]
@@ -270,7 +270,7 @@ namespace CheckoutOrderServiceTests
             Assert.IsNotNull(loggedMessage);
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.GetOrder)));
-            Assert.IsTrue(loggedMessage.Contains(fetchingOrderNotFoundError));
+            Assert.IsTrue(loggedMessage.Contains(fetchingOrderError));
             Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
         }
 
@@ -327,7 +327,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderNotFoundError));
+            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderError));
             _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
         }
 
@@ -344,7 +344,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains(savingOrderNotFoundError));
+            Assert.IsTrue(result.ErrorMessages.Contains(savingOrderError));
             _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
         }
 
@@ -365,7 +365,7 @@ namespace CheckoutOrderServiceTests
             Assert.IsNotNull(loggedMessage);
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.UpdateOrderLine)));
-            Assert.IsTrue(loggedMessage.Contains(savingOrderNotFoundError));
+            Assert.IsTrue(loggedMessage.Contains(savingOrderError));
             Assert.IsTrue(loggedMessage.Contains($"duplicate line matches found for order line id {orderLineId}"));
             Assert.IsTrue(loggedMessage.Contains("3"));
         }
@@ -485,7 +485,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.BadRequest, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains($"{savingOrderNotFoundError}, sku with code {newLine.Sku.Id} not found"));
+            Assert.IsTrue(result.ErrorMessages.Contains($"{savingOrderError}, sku with code {newLine.Sku.Id} not found"));
             _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
         }
 
@@ -506,7 +506,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.BadRequest, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains($"{savingOrderNotFoundError}, sku with code {newLine.Sku.Id} not found"));
+            Assert.IsTrue(result.ErrorMessages.Contains($"{savingOrderError}, sku with code {newLine.Sku.Id} not found"));
             _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
         }
 
@@ -526,7 +526,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains(savingOrderNotFoundError));
+            Assert.IsTrue(result.ErrorMessages.Contains(savingOrderError));
         }
 
         [TestMethod]
@@ -549,7 +549,7 @@ namespace CheckoutOrderServiceTests
             Assert.IsNotNull(loggedMessage);
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.UpdateOrderLine)));
-            Assert.IsTrue(loggedMessage.Contains(savingOrderNotFoundError));
+            Assert.IsTrue(loggedMessage.Contains(savingOrderError));
             Assert.IsTrue(loggedMessage.Contains($"duplicate matches found for sku id {skuModel.Id}"));
             Assert.IsTrue(loggedMessage.Contains("2"));
         }
@@ -583,7 +583,7 @@ namespace CheckoutOrderServiceTests
         }
 
         [TestMethod]
-        public void UpdateOrderLine__ReturnsInputRepoSaveLineId_IfOrderLineIsNewAndValid()
+        public void UpdateOrderLine_ReturnsInputRepoSaveLineId_IfOrderLineIsNewAndValid()
         {
             // Arrange
             var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
@@ -618,7 +618,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains(savingOrderNotFoundError));
+            Assert.IsTrue(result.ErrorMessages.Contains(savingOrderError));
         }
 
         [TestMethod]
@@ -640,7 +640,7 @@ namespace CheckoutOrderServiceTests
             Assert.IsNotNull(loggedMessage);
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
             Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.UpdateOrderLine)));
-            Assert.IsTrue(loggedMessage.Contains(savingOrderNotFoundError));
+            Assert.IsTrue(loggedMessage.Contains(savingOrderError));
             Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
         }
 
@@ -697,7 +697,7 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
-            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderNotFoundError));
+            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderError));
             _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
         }
 
