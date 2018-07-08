@@ -124,8 +124,7 @@ namespace CheckoutOrderServiceTests
 
             // Assert
             Assert.IsNotNull(loggedMessage);
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.CreateNewOrder)));
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.CreateNewOrder)}"));
             Assert.IsTrue(loggedMessage.Contains(newOrderError));
             Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
         }
@@ -217,8 +216,7 @@ namespace CheckoutOrderServiceTests
 
             // Assert
             Assert.IsNotNull(loggedMessage);
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.GetOrder)));
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.GetOrder)}"));
             Assert.IsTrue(loggedMessage.Contains(fetchingOrderError));
             Assert.IsTrue(loggedMessage.Contains("duplicate matches found"));
             Assert.IsTrue(loggedMessage.Contains("2"));
@@ -269,8 +267,7 @@ namespace CheckoutOrderServiceTests
 
             // Assert
             Assert.IsNotNull(loggedMessage);
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.GetOrder)));
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.GetOrder)}"));
             Assert.IsTrue(loggedMessage.Contains(fetchingOrderError));
             Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
         }
@@ -432,8 +429,7 @@ namespace CheckoutOrderServiceTests
 
             // Assert
             Assert.IsNotNull(loggedMessage);
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.ClearOrder)));
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.ClearOrder)}"));
             Assert.IsTrue(loggedMessage.Contains(clearingOrderLineError));
             Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
         }
@@ -527,8 +523,7 @@ namespace CheckoutOrderServiceTests
 
             // Assert
             Assert.IsNotNull(loggedMessage);
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.UpdateOrderLine)));
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.UpdateOrderLine)}"));
             Assert.IsTrue(loggedMessage.Contains(savingOrderError));
             Assert.IsTrue(loggedMessage.Contains($"duplicate line matches found for order line id {orderLineId}"));
             Assert.IsTrue(loggedMessage.Contains("3"));
@@ -711,8 +706,7 @@ namespace CheckoutOrderServiceTests
 
             // Assert
             Assert.IsNotNull(loggedMessage);
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.UpdateOrderLine)));
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.UpdateOrderLine)}"));
             Assert.IsTrue(loggedMessage.Contains(savingOrderError));
             Assert.IsTrue(loggedMessage.Contains($"duplicate matches found for sku id {skuModel.Id}"));
             Assert.IsTrue(loggedMessage.Contains("2"));
@@ -802,8 +796,7 @@ namespace CheckoutOrderServiceTests
 
             // Assert
             Assert.IsNotNull(loggedMessage);
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.UpdateOrderLine)));
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.UpdateOrderLine)}"));
             Assert.IsTrue(loggedMessage.Contains(savingOrderError));
             Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
         }
@@ -970,8 +963,7 @@ namespace CheckoutOrderServiceTests
 
             // Assert
             Assert.IsNotNull(loggedMessage);
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
-            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.DeleteOrderLine)));
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.DeleteOrderLine)}"));
             Assert.IsTrue(loggedMessage.Contains(deletingOrderLineError));
             Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
         }
