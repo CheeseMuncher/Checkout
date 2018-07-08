@@ -98,9 +98,36 @@ namespace CheckoutOrderService
             }
         }
 
+        /// <inheritdoc />
+        public ServiceResponse DeleteOrderLine(int orderId, int lineId)
+        {
+            try
+            {
+                var orderResponse = GetOrder(orderId);
+                if (!orderResponse.IsSuccessful)
+                {
+                    return new ServiceResponse<int>(orderResponse.ServiceError, orderResponse.ErrorMessages.ToArray());
+                }
+                var order = orderResponse.Data;
+                if (order.Lines == null || !order.Lines.Any(line => line.Id == lineId))
+                {
+                    return new ServiceResponse<int>(ServiceError.BadRequest, $"Error removing line from order with id {orderId}, order does not include line with id {lineId}");
+                }
+                order.Lines.RemoveAll(line => line.Id == lineId);
+                _repository.Save(order);
+                return new ServiceResponse();
+            }
+            catch(Exception e)
+            {
+                var publicErrorMessage = $"Error deleting line with {lineId} from order with id {orderId}";
+                LogError(nameof(DeleteOrderLine), publicErrorMessage, $"{e.Message} StackTrace: {e.StackTrace}");
+                return new ServiceResponse(ServiceError.InternalServerError, publicErrorMessage);
+            }
+        }
+        
         /// <summary>
-        /// Validates the supplied input line against the supplied order
-        /// </summary>
+                 /// Validates the supplied input line against the supplied order
+                 /// </summary>
         private ServiceResponse<int> ValidateOrderLine(OrderModel order, OrderLineModel line, string publicErrorMessage)
         {
             if (order.Lines == null)

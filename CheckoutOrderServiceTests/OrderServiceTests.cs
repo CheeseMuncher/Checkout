@@ -29,6 +29,7 @@ namespace CheckoutOrderServiceTests
         private const string orderNotFoundError = "Order not found";
         private string fetchingOrderNotFoundError = $"Error fetching order with id {orderId}";
         private string savingOrderNotFoundError = $"Error saving order with id {orderId}";
+        private string deletingOrderLineError = $"Error deleting line with {orderLineId} from order with id {orderId}";
         
         private SkuModel GetSkuModel(int suffix) => new SkuModel($"SkuCode{suffix}", $"Product {suffix}");
 
@@ -644,5 +645,173 @@ namespace CheckoutOrderServiceTests
         }
 
         #endregion UpdateOrderLine
+
+        #region DeleteOrderLine
+        
+        [TestMethod]
+        public void DeleteOrderLine_FetchesCorrespondingOrder()
+        {
+            // Arrange
+            Expression<Func<OrderModel, bool>> predicate = null;
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Callback((Expression<Func<OrderModel, bool>> exp) => predicate = exp);
+
+            // Act
+            _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsNotNull(predicate);
+
+            var matchingOrder = new OrderModel { Id = orderId };
+            var otherOrder = new OrderModel { Id = orderId + 1 };
+
+            var func = predicate.Compile();
+            Assert.IsTrue(func(matchingOrder));
+            Assert.IsFalse(func(otherOrder));
+        }
+
+        [TestMethod]
+        public void DeleteOrderLine_ReturnsNotFound_IfOrderNotFound()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => null);
+
+            // Act
+            var result = _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.NotFound, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains(orderNotFoundError));
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void DeleteOrderLine_ReturnsInternalServerError_IfOrderGetFails()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Throws(new Exception());
+
+            // Act
+            var result = _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains(fetchingOrderNotFoundError));
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void DeleteOrderLine_ReturnsBadRequest_IfOrderLinesNull()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => new List<OrderModel> { repoOrder });
+
+            // Act
+            var result = _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.BadRequest, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains($"Error removing line from order with id {orderId}, order does not include line with id {orderLineId}"));
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void DeleteOrderLine_ReturnsBadRequest_IfOrderDoesNotContainLine()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId + 1) } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => new List<OrderModel> { repoOrder });
+
+            // Act
+            var result = _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.BadRequest, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains($"Error removing line from order with id {orderId}, order does not include line with id {orderLineId}"));
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void DeleteOrderLine_SavesOrderWithoutMatchingLine_IfOrderContainsMatchingLine()
+        {
+            // Arrange
+            var lineToDelete = GetOrderLine(orderLineId);
+            var otherOrderLine = GetOrderLine(orderLineId + 1);
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { lineToDelete, otherOrderLine } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
+
+            OrderModel savePayload = null;
+            _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Callback((OrderModel order) => savePayload = order);
+
+            // Act
+            _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsNotNull(savePayload);
+            Assert.AreEqual(1, savePayload.Lines.Count());
+            Assert.AreEqual(orderLineId + 1, savePayload.Lines.First().Id);
+            _mockRepository.Verify(repo => repo.Save(It.IsAny<OrderModel>()), Times.Once);
+        }
+
+        [TestMethod]
+        public void DeleteOrderLine_ReturnsSuccess_AfterOrderLineDeleted()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
+
+            // Act
+            var result = _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+        }
+
+        [TestMethod]
+        public void DeleteOrderLine_ReturnsInternalServerError_IfExceptionThrown()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
+
+            _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception());
+
+            // Act
+            var result = _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains(deletingOrderLineError));
+        }
+
+        [TestMethod]
+        public void DeleteOrderLine_LogsError_IfExceptionThrown()
+        {
+            // Arrange
+            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
+
+            _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception(exceptionMessage));
+
+            string loggedMessage = null;
+            _mockLogger.Setup(logger => logger.LogError(It.IsAny<string>())).Callback((string str) => loggedMessage = str);
+
+            // Act
+            _target.DeleteOrderLine(orderId, orderLineId);
+
+            // Assert
+            Assert.IsNotNull(loggedMessage);
+            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService)));
+            Assert.IsTrue(loggedMessage.Contains(nameof(OrderService.DeleteOrderLine)));
+            Assert.IsTrue(loggedMessage.Contains(deletingOrderLineError));
+            Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
+        }
+
+        #endregion DeleteOrderLine
     }
 }

@@ -25,5 +25,10 @@ namespace CheckoutOrderService
         /// </summary>
         /// <returns>The persistence identifier for the line</returns>
         ServiceResponse<int> UpdateOrderLine(int orderId, OrderLineModel line);
+
+        /// <summary>
+        /// Removes the corresponding line from the corresponding order for the supplied identifiers
+        /// </summary>
+        ServiceResponse DeleteOrderLine(int orderId, int lineId);
     }
 }
