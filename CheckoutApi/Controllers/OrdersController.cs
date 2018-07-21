@@ -9,11 +9,11 @@ namespace CheckoutApi.Controllers
     [ApiController]
     public class OrdersController : ControllerBase
     {
-        private readonly IOrderService orderService;
+        private readonly IOrderService _orderService;
 
-        public OrdersController(/*IOrderService orderService*/)
+        public OrdersController(IOrderService orderService)
         {
-            //this.orderService = orderService;
+            _orderService = orderService;
         }
 
         [HttpGet]
