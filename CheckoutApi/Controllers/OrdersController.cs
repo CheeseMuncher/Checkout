@@ -11,16 +11,44 @@ namespace CheckoutApi.Controllers
     {
         private readonly IOrderService orderService;
 
-        public OrdersController(IOrderService orderService)
+        public OrdersController(/*IOrderService orderService*/)
         {
-            this.orderService = orderService;
+            //this.orderService = orderService;
         }
 
-        [Route("api/[controller]/{orderId:int}")]
         [HttpGet]
+        public ActionResult<IEnumerable<Order>> Get()
+        {
+            return new List<Order>
+            {
+                new Order { Lines = new List<OrderLine> { new OrderLine { SkuCode = "Hello World 1" } } },
+                new Order { Lines = new List<OrderLine> { new OrderLine { SkuCode = "Hello World 2" } } },
+                new Order { Lines = new List<OrderLine> { new OrderLine { SkuCode = "Hello World 3" } } }
+            };                
+        }
+
+        [HttpGet("{orderId}", Name = "GetOrder")]
         public ActionResult<Order> Get(int orderId)
         {
-            return null;
+            return new Order { Lines = new List<OrderLine> { new OrderLine { SkuCode = $"Hello World {orderId}" } } };
+        }
+
+        [HttpPost("{orderId}", Name = "CreateOrder")]
+        public IActionResult Create(Order order)
+        {
+            return Created("GetOrder/7", "7");
+        }
+
+        [HttpDelete("{orderId}", Name = "ClearOrder")]
+        public IActionResult Clear(int orderId, [FromQuery]int? orderLineId)
+        {
+            return Ok();
+        }
+
+        [HttpPut("{orderId}", Name = "UpdateOrderLine")]
+        public IActionResult Update(int orderId, OrderLine orderLine)
+        {
+            return Ok();
         }
     }
 }
