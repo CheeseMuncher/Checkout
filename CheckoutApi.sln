@@ -5,9 +5,11 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckoutApi", "CheckoutApi\CheckoutApi.csproj", "{4CB0E071-B402-4AE5-96AA-E1F976F25378}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckoutOrderService", "CheckoutOrderService\CheckoutOrderService.csproj", "{E79E184C-FD55-4E6A-B5DF-0D7097B1C06B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckoutOrderService", "CheckoutOrderService\CheckoutOrderService.csproj", "{E79E184C-FD55-4E6A-B5DF-0D7097B1C06B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckoutOrderServiceTests", "CheckoutOrderServiceTests\CheckoutOrderServiceTests.csproj", "{36856FDE-27CB-478C-93CA-7722C87F2F1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckoutApiTests", "CheckoutApiTests\CheckoutApiTests.csproj", "{5D12DD17-B1E0-44C0-BA00-51828455597B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{36856FDE-27CB-478C-93CA-7722C87F2F1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36856FDE-27CB-478C-93CA-7722C87F2F1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36856FDE-27CB-478C-93CA-7722C87F2F1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D12DD17-B1E0-44C0-BA00-51828455597B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D12DD17-B1E0-44C0-BA00-51828455597B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D12DD17-B1E0-44C0-BA00-51828455597B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D12DD17-B1E0-44C0-BA00-51828455597B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CheckoutOrderService;
+using CheckoutOrderService.Models;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
 namespace CheckoutApi.Controllers
@@ -7,10 +9,18 @@ namespace CheckoutApi.Controllers
     [ApiController]
     public class OrdersController : ControllerBase
     {
-        [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        private readonly IOrderService orderService;
+
+        public OrdersController(IOrderService orderService)
         {
-            return new string[] { "Hello", "World" };
+            this.orderService = orderService;
+        }
+
+        [Route("api/[controller]/{orderId:int}")]
+        [HttpGet]
+        public ActionResult<Order> Get(int orderId)
+        {
+            return null;
         }
     }
 }
