@@ -57,7 +57,18 @@ namespace CheckoutApi.Controllers
         [HttpPost("{orderId}", Name = "CreateOrder")]
         public IActionResult Create(Order order)
         {
-            return Created("GetOrder/7", "7");
+            var result = _validator.Validate(order);
+            if(!result.IsValid)
+            {
+                return BadRequest(string.Join(", ", result.Errors));
+            }
+            var model = _mapper.Map<Order, OrderModel>(order);
+            var response = _orderService.CreateNewOrder(model);
+            if (!response.IsSuccessful)
+            {
+                return InternalServerError();
+            }
+            return Created($"GetOrder/{response.Data}", $"{response.Data}");
         }
 
         [HttpDelete("{orderId}", Name = "ClearOrder")]
