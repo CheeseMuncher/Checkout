@@ -15,13 +15,15 @@ namespace CheckoutApi.Controllers
     {
         private readonly IOrderService _orderService;
         private readonly IMapper _mapper;
-        private readonly IValidator<Order> _validator;
+        private readonly IValidator<Order> _orderValidator;
+        private readonly IValidator<OrderLine> _orderLineValidator;
 
-        public OrdersController(IOrderService orderService, IMapper mapper, IValidator<Order> validator)
+        public OrdersController(IOrderService orderService, IMapper mapper, IValidator<Order> orderValidator, IValidator<OrderLine> orderLineValidator)
         {
             _orderService = orderService;
             _mapper = mapper;
-            _validator = validator;
+            _orderValidator = orderValidator;
+            _orderLineValidator = orderLineValidator;
         }
 
         [HttpGet]
@@ -50,7 +52,7 @@ namespace CheckoutApi.Controllers
         [HttpPost("{orderId}", Name = "CreateOrder")]
         public IActionResult Create(Order order)
         {
-            var result = _validator.Validate(order);
+            var result = _orderValidator.Validate(order);
             if(!result.IsValid)
             {
                 return BadRequest(string.Join(", ", result.Errors));
@@ -81,7 +83,19 @@ namespace CheckoutApi.Controllers
         [HttpPut("{orderId}", Name = "UpdateOrderLine")]
         public IActionResult Update(int orderId, OrderLine orderLine)
         {
-            return Ok();
+            var result = _orderLineValidator.Validate(orderLine);
+            if (!result.IsValid)
+            {
+                return BadRequest(string.Join(", ", result.Errors));
+            }
+            var model = _mapper.Map<OrderLine, OrderLineModel>(orderLine);
+            var response = _orderService.UpdateOrderLine(orderId, model);
+            if(!response.IsSuccessful)
+            {
+                return ProcessServiceFailure(response);
+            }
+            // TODO update location if we create an Order Getter
+            return Created(string.Empty, $"{response.Data}");
         }
 
         /// <summary>

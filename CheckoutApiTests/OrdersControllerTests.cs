@@ -21,8 +21,10 @@ namespace CheckoutApiTests
         private Mock<IOrderService> _mockOrderService;
         private Mock<IMapper> _mockOrderMapper;
         private Mock<IValidator<Order>> _mockOrderValidator;
+        private Mock<IValidator<OrderLine>> _mockOrderLineValidator;
 
         private const int orderId = 11;
+        private const int lineId = 13;
 
         [TestInitialize]
         public void TestInit()
@@ -30,8 +32,9 @@ namespace CheckoutApiTests
             _mockOrderService = new Mock<IOrderService>();
             _mockOrderMapper = new Mock<IMapper>();
             _mockOrderValidator = new Mock<IValidator<Order>>();
+            _mockOrderLineValidator = new Mock<IValidator<OrderLine>>();
 
-            _target = new OrdersController(_mockOrderService.Object, _mockOrderMapper.Object, _mockOrderValidator.Object);
+            _target = new OrdersController(_mockOrderService.Object, _mockOrderMapper.Object, _mockOrderValidator.Object, _mockOrderLineValidator.Object);
         }
 
         [TestMethod]
@@ -322,21 +325,19 @@ namespace CheckoutApiTests
         public void ClearOrder_InvokesServiceDeleteOrderLineWithCorrectArguments_IfLineIdSupplied()
         {
             // Arrange
-            var apiRequestLineId = 13;
-
             int id = 0;
-            int lineId = 0;
+            int inputLineId = 0;
             _mockOrderService
                 .Setup(service => service.DeleteOrderLine(It.IsAny<int>(), It.IsAny<int>()))
-                .Callback((int i, int j) => { id = i; lineId = j; })
+                .Callback((int i, int j) => { id = i; inputLineId = j; })
                 .Returns(new ServiceResponse());
 
             // Act
-            _target.Clear(orderId, apiRequestLineId);
+            _target.Clear(orderId, lineId);
 
             // Assert
             Assert.AreEqual(orderId, id);
-            Assert.AreEqual(apiRequestLineId, lineId);
+            Assert.AreEqual(lineId, inputLineId);
             _mockOrderService.Verify(service => service.ClearOrder(It.IsAny<int>()), Times.Never);
         }
 
@@ -350,7 +351,7 @@ namespace CheckoutApiTests
                 .Returns(new ServiceResponse(ServiceError.InternalServerError, message));
 
             // Act
-            var result = _target.Clear(orderId, 1) as ObjectResult;
+            var result = _target.Clear(orderId, lineId) as ObjectResult;
 
             // Assert
             Assert.IsNotNull(result);
@@ -369,7 +370,7 @@ namespace CheckoutApiTests
                 .Returns(new ServiceResponse(ServiceError.BadRequest, message1, message2));
 
             // Act
-            var result = _target.Clear(orderId, 1) as ObjectResult;
+            var result = _target.Clear(orderId, lineId) as ObjectResult;
 
             // Assert
             Assert.IsNotNull(result);
@@ -388,7 +389,7 @@ namespace CheckoutApiTests
                 .Returns(new ServiceResponse(ServiceError.NotFound, message));
 
             // Act
-            var result = _target.Clear(orderId, 1) as ObjectResult;
+            var result = _target.Clear(orderId, lineId) as ObjectResult;
 
             // Assert
             Assert.IsNotNull(result);
@@ -405,11 +406,192 @@ namespace CheckoutApiTests
                 .Returns(new ServiceResponse());
 
             // Act
-            var result = _target.Clear(orderId, 1) as OkResult;
+            var result = _target.Clear(orderId, lineId) as OkResult;
 
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual((int)HttpStatusCode.OK, result.StatusCode);
+        }
+
+        [TestMethod]
+        public void Update_ValidatesInput()
+        {
+            // Arrange
+            OrderLine line = null;
+            _mockOrderLineValidator
+                .Setup(validator => validator.Validate(It.IsAny<OrderLine>()))
+                .Callback((OrderLine l) => line = l)
+                .Returns(new ValidationResult(new[] { new ValidationFailure(string.Empty, string.Empty) }));
+
+            // Act
+            _target.Update(orderId, new OrderLine { Id = lineId });
+
+            // Assert
+            Assert.IsNotNull(line);
+            Assert.AreEqual(lineId, line.Id);
+        }
+
+        [TestMethod]
+        public void Update_ReturnsBadRequestWithErrorMessages_IfValidationFails()
+        {
+            // Arrange
+            var message1 = "Error Message 1";
+            var message2 = "Error Message 2";
+            _mockOrderLineValidator
+                .Setup(validator => validator.Validate(It.IsAny<OrderLine>()))
+                .Returns(new ValidationResult(new[] { new ValidationFailure(string.Empty, message1), new ValidationFailure(string.Empty, message2) }));
+
+            // Act
+            var result = _target.Update(orderId, new OrderLine()) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.BadRequest, result.StatusCode);
+            Assert.IsTrue(result.Value.ToString().Contains(message1));
+            Assert.IsTrue(result.Value.ToString().Contains(message2));
+        }
+
+        [TestMethod]
+        public void Update_InvokesMapperWithCorrectInput_IfValidationSucceeds()
+        {
+            // Arrange
+            _mockOrderLineValidator
+                .Setup(validator => validator.Validate(It.IsAny<OrderLine>()))
+                .Returns(new ValidationResult());
+
+            OrderLine mapperInput = null;
+            _mockOrderMapper
+                .Setup(mapper => mapper.Map<OrderLine, OrderLineModel>(It.IsAny<OrderLine>()))
+                .Callback((OrderLine line) => mapperInput = line);
+
+            _mockOrderService
+                .Setup(service => service.UpdateOrderLine(It.IsAny<int>(), It.IsAny<OrderLineModel>()))
+                .Returns(new ServiceResponse<int>());
+
+            // Act
+            _target.Update(orderId, new OrderLine { Id = lineId });
+
+            // Assert
+            Assert.IsNotNull(mapperInput);
+            Assert.AreEqual(lineId, mapperInput.Id);
+        }
+
+        [TestMethod]
+        public void Update_InvokesServiceUpdateOrderLineWithMapperOutput()
+        {
+            // Arrange
+            _mockOrderLineValidator
+                .Setup(validator => validator.Validate(It.IsAny<OrderLine>()))
+                .Returns(new ValidationResult());
+
+            _mockOrderMapper
+                .Setup(mapper => mapper.Map<OrderLine, OrderLineModel>(It.IsAny<OrderLine>()))
+                .Returns(new OrderLineModel(lineId, new SkuModel(string.Empty, string.Empty)));
+
+            int id = 0;
+            OrderLineModel model = null;
+            _mockOrderService
+                .Setup(service => service.UpdateOrderLine(It.IsAny<int>(), It.IsAny<OrderLineModel>()))
+                .Callback((int i, OrderLineModel olm) => { id = i; model = olm; })
+                .Returns(new ServiceResponse<int>());
+
+            // Act
+            _target.Update(orderId, new OrderLine());
+
+            // Assert
+            Assert.IsNotNull(model);
+            Assert.AreEqual(lineId, model.Id);
+            Assert.AreEqual(orderId, id);
+        }
+
+        [TestMethod]
+        public void Update_ReturnsInternalServerErrorWithoutErrorMessages_IfServiceUpdateOrderLineResultIsInternalServerError()
+        {
+            // Arrange
+            _mockOrderLineValidator
+                .Setup(validator => validator.Validate(It.IsAny<OrderLine>()))
+                .Returns(new ValidationResult());
+
+            var message = "Error Message";
+            _mockOrderService
+                .Setup(service => service.UpdateOrderLine(It.IsAny<int>(), It.IsAny<OrderLineModel>()))
+                .Returns(new ServiceResponse<int>(ServiceError.InternalServerError, message));
+
+            // Act
+            var result = _target.Update(orderId, new OrderLine()) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.InternalServerError, result.StatusCode);
+            Assert.IsTrue(string.IsNullOrEmpty(result.Value?.ToString()));
+        }
+
+        [TestMethod]
+        public void Update_ReturnsBadRequestWithErrorMessages_IfServiceUpdateOrderLineResultIsBadRequest()
+        {
+            // Arrange
+            _mockOrderLineValidator
+                .Setup(validator => validator.Validate(It.IsAny<OrderLine>()))
+                .Returns(new ValidationResult());
+
+            var message1 = "Error Message 1";
+            var message2 = "Error Message 2";
+            _mockOrderService
+                .Setup(service => service.UpdateOrderLine(It.IsAny<int>(), It.IsAny<OrderLineModel>()))
+                .Returns(new ServiceResponse<int>(ServiceError.BadRequest, message1, message2));
+
+            // Act
+            var result = _target.Update(orderId, new OrderLine()) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.BadRequest, result.StatusCode);
+            Assert.IsTrue(result.Value.ToString().Contains(message1));
+            Assert.IsTrue(result.Value.ToString().Contains(message2));
+        }
+
+        [TestMethod]
+        public void Update_ReturnsNotFound_IfServiceUpdateOrderLineResultIsNotFound()
+        {
+            // Arrange
+            _mockOrderLineValidator
+                .Setup(validator => validator.Validate(It.IsAny<OrderLine>()))
+                .Returns(new ValidationResult());
+
+            var message = "Error Message";
+            _mockOrderService
+                .Setup(service => service.UpdateOrderLine(It.IsAny<int>(), It.IsAny<OrderLineModel>()))
+                .Returns(new ServiceResponse<int>(ServiceError.NotFound, message));
+
+            // Act
+            var result = _target.Update(orderId, new OrderLine()) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.NotFound, result.StatusCode);
+            Assert.IsTrue(result.Value.ToString().Contains(message));
+        }
+
+        [TestMethod]
+        public void Update_ReturnsCreatedWithNewId_IfServiceResultSuccessful()
+        {
+            // Arrange
+            _mockOrderLineValidator
+                .Setup(validator => validator.Validate(It.IsAny<OrderLine>()))
+                .Returns(new ValidationResult());
+
+            _mockOrderService
+                .Setup(service => service.UpdateOrderLine(It.IsAny<int>(), It.IsAny<OrderLineModel>()))
+                .Returns(new ServiceResponse<int>(lineId));
+
+            // Act
+            var result = _target.Update(orderId, new OrderLine()) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.Created, result.StatusCode);
+            Assert.AreEqual(lineId, Convert.ToInt32(result.Value));
+            Assert.AreEqual(string.Empty, (result as CreatedResult).Location);
         }
     }
 }
