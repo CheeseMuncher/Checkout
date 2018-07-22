@@ -3,6 +3,7 @@ using CheckoutApi.Controllers;
 using CheckoutOrderService;
 using CheckoutOrderService.Common;
 using CheckoutOrderService.Models;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -17,6 +18,7 @@ namespace CheckoutApiTests
 
         private Mock<IOrderService> _mockOrderService;
         private Mock<IMapper> _mockOrderMapper;
+        private Mock<IValidator<Order>> _mockOrderValidator;
 
         private const int orderId = 11;
 
@@ -25,8 +27,9 @@ namespace CheckoutApiTests
         {
             _mockOrderService = new Mock<IOrderService>();
             _mockOrderMapper = new Mock<IMapper>();
+            _mockOrderValidator = new Mock<IValidator<Order>>();
 
-            _target = new OrdersController(_mockOrderService.Object, _mockOrderMapper.Object);
+            _target = new OrdersController(_mockOrderService.Object, _mockOrderMapper.Object, _mockOrderValidator.Object);
         }
 
         [TestMethod]

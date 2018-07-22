@@ -2,6 +2,7 @@
 using CheckoutOrderService;
 using CheckoutOrderService.Common;
 using CheckoutOrderService.Models;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Net;
@@ -14,11 +15,13 @@ namespace CheckoutApi.Controllers
     {
         private readonly IOrderService _orderService;
         private readonly IMapper _mapper;
+        private readonly IValidator<Order> _validator;
 
-        public OrdersController(IOrderService orderService, IMapper mapper)
+        public OrdersController(IOrderService orderService, IMapper mapper, IValidator<Order> validator)
         {
             _orderService = orderService;
             _mapper = mapper;
+            _validator = validator;
         }
 
         [HttpGet]
