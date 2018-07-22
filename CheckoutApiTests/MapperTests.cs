@@ -19,7 +19,7 @@ namespace CheckoutApiTests
         }
 
         [TestMethod]
-        public void OrderMapper_MapsPropertiesFromServiceOrderLineModelByName()
+        public void OrderMapper_Outbound_MapsPropertiesFromServiceOrderLineModelByName()
         {
             // Arrange
             var serviceModel = new OrderLineModel(2, new SkuModel(string.Empty, string.Empty))
@@ -38,7 +38,7 @@ namespace CheckoutApiTests
         }
 
         [TestMethod]
-        public void OrderMapper_MapsSkuPropertiesFromServiceOrderLineModel()
+        public void OrderMapper_Outbound_MapsSkuPropertiesFromServiceOrderLineModel()
         {
             // Arrange
             var serviceModel = new OrderLineModel(2, new SkuModel("3", "Sku3"));
@@ -52,7 +52,7 @@ namespace CheckoutApiTests
         }
 
         [TestMethod]
-        public void OrderMapper_MapsPropertiesFromServiceOrderModelByName()
+        public void OrderMapper_Outbound_MapsPropertiesFromServiceOrderModelByName()
         {
             // Arrange
             var serviceModel = new OrderModel { Id = 2 };
@@ -65,7 +65,7 @@ namespace CheckoutApiTests
         }
 
         [TestMethod]
-        public void OrderMapper_MapsSingleOrderLine()
+        public void OrderMapper_Outbound_MapsSingleOrderLine()
         {
             // Arrange
             var serviceLineModel = new OrderLineModel(2, new SkuModel(string.Empty, string.Empty));
@@ -80,7 +80,7 @@ namespace CheckoutApiTests
         }
 
         [TestMethod]
-        public void OrderMapper_MapsMultipleOrderLines()
+        public void OrderMapper_Outbound_MapsMultipleOrderLines()
         {
             // Arrange
             var serviceLineModel1 = new OrderLineModel(1, new SkuModel(string.Empty, string.Empty));
@@ -94,6 +94,89 @@ namespace CheckoutApiTests
             Assert.AreEqual(serviceOrderModel.Lines.Count, result.Lines.Count);
             Assert.IsTrue(result.Lines.Any(line => line.Id == serviceLineModel1.Id));
             Assert.IsTrue(result.Lines.Any(line => line.Id == serviceLineModel2.Id));
+        }
+
+        [TestMethod]
+        public void OrderMapper_Inbound_MapsPropertiesToServiceOrderLineModelByName()
+        {
+            // Arrange
+            var apiModel = new OrderLine
+            {
+                SortOrder = 2,
+                Quantity = 3,
+            };
+
+            // Act
+            var result = _target.Map<OrderLine, OrderLineModel>(apiModel);
+
+            // Assert
+            Assert.AreEqual(apiModel.SortOrder, result.SortOrder);
+            Assert.AreEqual(apiModel.Quantity, result.Quantity);
+        }
+
+        [TestMethod]
+        public void OrderMapper_Inbound_MapsImmutablePropertiesToServiceOrderLineModel()
+        {
+            // Arrange
+            var apiModel = new OrderLine
+            {
+                Id = 2,
+                SkuCode = "SkuCode",
+                SkuDisplayName = "Sku Name"
+            };
+
+            // Act
+            var result = _target.Map<OrderLine, OrderLineModel>(apiModel);
+
+            // Assert
+            Assert.AreEqual(apiModel.Id, result.Id);
+            Assert.AreEqual(apiModel.SkuCode, result.Sku.Id);
+            Assert.AreEqual(apiModel.SkuDisplayName, result.Sku.DisplayName);
+        }
+
+        [TestMethod]
+        public void OrderMapper_Inbound_MapsPropertiesToServiceOrderModelByName()
+        {
+            // Arrange
+            var apiModel = new Order { Id = 2 };
+
+            // Act
+            var result = _target.Map<Order, OrderModel>(apiModel);
+
+            // Assert
+            Assert.AreEqual(apiModel.Id, result.Id);
+        }
+
+        [TestMethod]
+        public void OrderMapper_Inbound_MapsSingleOrderLine()
+        {
+            // Arrange
+            var apiLineModel = new OrderLine { Id = 2 };
+            var apiOrderModel = new Order { Lines = new List<OrderLine> { apiLineModel } };
+
+            // Act
+            var result = _target.Map<Order, OrderModel>(apiOrderModel);
+
+            // Assert
+            Assert.AreEqual(apiOrderModel.Lines.Count, result.Lines.Count);
+            Assert.AreEqual(apiLineModel.Id, result.Lines.First().Id);
+        }
+
+        [TestMethod]
+        public void OrderMapper_Inbound_MapsMultipleOrderLines()
+        {
+            // Arrange
+            var apiLineModel1 = new OrderLine { Id = 1 };
+            var apiLineModel2 = new OrderLine { Id = 2 };
+            var serviceOrderModel = new Order { Lines = new List<OrderLine> { apiLineModel1, apiLineModel2 } };
+
+            // Act
+            var result = _target.Map<Order, OrderModel>(serviceOrderModel);
+
+            // Assert
+            Assert.AreEqual(serviceOrderModel.Lines.Count, result.Lines.Count);
+            Assert.IsTrue(result.Lines.Any(line => line.Id == apiLineModel1.Id));
+            Assert.IsTrue(result.Lines.Any(line => line.Id == apiLineModel2.Id));
         }
     }
 }
