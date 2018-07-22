@@ -41,14 +41,7 @@ namespace CheckoutApi.Controllers
             var response = _orderService.GetOrder(orderId);
             if (!response.IsSuccessful)
             {
-                if (response.ServiceError == ServiceError.NotFound)
-                {
-                    return NotFound(string.Join(", ", response.ErrorMessages));
-                }
-                if (response.ServiceError == ServiceError.InternalServerError)
-                {
-                    return InternalServerError();
-                }
+                return ProcessServiceFailure(response) as ActionResult;
             }
             var order = _mapper.Map<OrderModel, Order>(response.Data);
             return Ok(order);
@@ -66,7 +59,7 @@ namespace CheckoutApi.Controllers
             var response = _orderService.CreateNewOrder(model);
             if (!response.IsSuccessful)
             {
-                return InternalServerError();
+                return ProcessServiceFailure(response);
             }
             return Created($"GetOrder/{response.Data}", $"{response.Data}");
         }
@@ -74,6 +67,14 @@ namespace CheckoutApi.Controllers
         [HttpDelete("{orderId}", Name = "ClearOrder")]
         public IActionResult Clear(int orderId, [FromQuery]int? orderLineId)
         {
+            var response = orderLineId.HasValue
+                ? _orderService.DeleteOrderLine(orderId, orderLineId.Value)
+                : _orderService.ClearOrder(orderId);
+
+            if (!response.IsSuccessful)
+            {
+                return ProcessServiceFailure(response) as ActionResult;
+            }
             return Ok();
         }
 
@@ -83,6 +84,30 @@ namespace CheckoutApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Reusable service failure handling
+        /// TODO: move this to an abstract CheckoutApiControllerBase when we add another controller 
+        /// </summary>
+        private IActionResult ProcessServiceFailure(ServiceResponse response)
+        {
+            switch(response.ServiceError)
+            {
+                case ServiceError.NotFound:
+                    return NotFound(string.Join(", ", response.ErrorMessages));
+
+                case ServiceError.BadRequest:
+                    return BadRequest(string.Join(", ", response.ErrorMessages));
+
+                case ServiceError.InternalServerError:
+                default:
+                    return InternalServerError();
+            }
+        }
+
+        /// <summary>
+        /// InternalServerError initialise consistent with the other initialisers on <see cref="ContollerBase"/>
+        /// TODO: move this to an abstract CheckoutApiControllerBase when we add another controller 
+        /// </summary>
         private ObjectResult InternalServerError()
         {
             return new ObjectResult(null)

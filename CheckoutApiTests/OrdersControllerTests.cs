@@ -265,5 +265,151 @@ namespace CheckoutApiTests
             Assert.AreEqual((int)HttpStatusCode.InternalServerError, result.StatusCode);
             Assert.IsTrue(string.IsNullOrEmpty(result.Value?.ToString()));
         }
+        
+        [TestMethod]
+        public void ClearOrder_InvokesServiceClearOrderWithCorrectArguments_IfLineIdNull()
+        {
+            // Arrange
+            int id = 0;
+            _mockOrderService
+                .Setup(service => service.ClearOrder(It.IsAny<int>()))
+                .Callback((int i) => id = i)
+                .Returns(new ServiceResponse());
+
+            // Act
+            _target.Clear(orderId, null);
+
+            // Assert
+            Assert.AreEqual(orderId, id);
+            _mockOrderService.Verify(service => service.DeleteOrderLine(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsInternalServerErrorWithoutErrorMessages_IfServiceClearOrderResultIsInternalServerError()
+        {
+            // Arrange
+            var message = "Error Message";
+            _mockOrderService
+                .Setup(service => service.ClearOrder(It.IsAny<int>()))
+                .Returns(new ServiceResponse(ServiceError.InternalServerError, message));
+
+            // Act
+            var result = _target.Clear(orderId, null) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.InternalServerError, result.StatusCode);
+            Assert.IsTrue(string.IsNullOrEmpty(result.Value?.ToString()));
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsOk_IfServiceClearOrderResultSuccessful()
+        {
+            // Arrange
+            _mockOrderService
+                .Setup(service => service.ClearOrder(It.IsAny<int>()))
+                .Returns(new ServiceResponse());
+
+            // Act
+            var result = _target.Clear(orderId, null) as OkResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.OK, result.StatusCode);
+        }
+        
+        [TestMethod]
+        public void ClearOrder_InvokesServiceDeleteOrderLineWithCorrectArguments_IfLineIdSupplied()
+        {
+            // Arrange
+            var apiRequestLineId = 13;
+
+            int id = 0;
+            int lineId = 0;
+            _mockOrderService
+                .Setup(service => service.DeleteOrderLine(It.IsAny<int>(), It.IsAny<int>()))
+                .Callback((int i, int j) => { id = i; lineId = j; })
+                .Returns(new ServiceResponse());
+
+            // Act
+            _target.Clear(orderId, apiRequestLineId);
+
+            // Assert
+            Assert.AreEqual(orderId, id);
+            Assert.AreEqual(apiRequestLineId, lineId);
+            _mockOrderService.Verify(service => service.ClearOrder(It.IsAny<int>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsInternalServerErrorWithoutErrorMessages_IfServiceDeleteOrderLineResultIsInternalServerError()
+        {
+            // Arrange
+            var message = "Error Message";
+            _mockOrderService
+                .Setup(service => service.DeleteOrderLine(It.IsAny<int>(), It.IsAny<int>()))
+                .Returns(new ServiceResponse(ServiceError.InternalServerError, message));
+
+            // Act
+            var result = _target.Clear(orderId, 1) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.InternalServerError, result.StatusCode);
+            Assert.IsTrue(string.IsNullOrEmpty(result.Value?.ToString()));
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsBadRequestWithErrorMessages_IfServiceDeleteOrderLineResultIsBadRequest()
+        {
+            // Arrange
+            var message1 = "Error Message 1";
+            var message2 = "Error Message 2";
+            _mockOrderService
+                .Setup(service => service.DeleteOrderLine(It.IsAny<int>(), It.IsAny<int>()))
+                .Returns(new ServiceResponse(ServiceError.BadRequest, message1, message2));
+
+            // Act
+            var result = _target.Clear(orderId, 1) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.BadRequest, result.StatusCode);
+            Assert.IsTrue(result.Value.ToString().Contains(message1));
+            Assert.IsTrue(result.Value.ToString().Contains(message2));
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsNotFound_IfServiceDeleteOrderLineResultIsNotFound()
+        {
+            // Arrange
+            var message = "Error Message";
+            _mockOrderService
+                .Setup(service => service.DeleteOrderLine(It.IsAny<int>(), It.IsAny<int>()))
+                .Returns(new ServiceResponse(ServiceError.NotFound, message));
+
+            // Act
+            var result = _target.Clear(orderId, 1) as ObjectResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.NotFound, result.StatusCode);
+            Assert.IsTrue(result.Value.ToString().Contains(message));
+        }
+
+        [TestMethod]
+        public void ClearOrder_ReturnsOk_IfServiceDeleteOrderLineResultSuccessful()
+        {
+            // Arrange
+            _mockOrderService
+                .Setup(service => service.DeleteOrderLine(It.IsAny<int>(), It.IsAny<int>()))
+                .Returns(new ServiceResponse());
+
+            // Act
+            var result = _target.Clear(orderId, 1) as OkResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual((int)HttpStatusCode.OK, result.StatusCode);
+        }
     }
 }
