@@ -62,8 +62,10 @@ namespace CheckoutApi
 
         private IKernel RegisterApplicationComponents(IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
-            // IKernelConfiguration config = new KernelConfiguration();
-            Kernel = new StandardKernel(new OrderServiceModule());
+            // TODO Add duplicate registration checks when the next ServiceModule is added
+            Kernel = new StandardKernel(
+                new ApiModule(),
+                new OrderServiceModule());
 
             // Register application services
             foreach (var ctrlType in app.GetControllerTypes())

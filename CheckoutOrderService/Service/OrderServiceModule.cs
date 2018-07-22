@@ -3,6 +3,9 @@ using Ninject.Modules;
 
 namespace CheckoutOrderService.Service
 {
+    /// <summary>
+    /// Defines all the bindings required for the OrderServiceModule
+    /// </summary>
     public class OrderServiceModule : NinjectModule
     {
         public override void Load()
