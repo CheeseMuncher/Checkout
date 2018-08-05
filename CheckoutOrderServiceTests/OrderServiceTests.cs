@@ -49,6 +49,76 @@ namespace CheckoutOrderServiceTests
             _target = new OrderService(_mockRepository.Object, _mockLogger.Object);
         }
 
+        #region GetSkus
+
+        [TestMethod]
+        public void GetSkus_InvokesRepoGetWithCorrectArguments()
+        {
+            // Arrange
+            Expression<Func<SkuModel, bool>> predicate = null;
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Callback((Expression<Func<SkuModel, bool>> exp) => predicate = exp);
+
+            // Act
+            _target.GetSkus();
+
+            // Assert
+            Assert.IsNotNull(predicate);
+            var func = predicate.Compile();
+            Assert.IsTrue(func(GetSkuModel(1)));
+        }
+
+        [TestMethod]
+        public void GetSkus_ReturnsRepoResult()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Returns(new List<SkuModel> { GetSkuModel(1), GetSkuModel(2) } );
+
+            // Act
+            var result = _target.GetSkus();
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+            Assert.AreEqual(2, result.Data.Count());
+            Assert.AreEqual(GetSkuModel(1).DisplayName, result.Data.First(sku => sku.Id == GetSkuModel(1).Id).DisplayName);
+            Assert.AreEqual(GetSkuModel(2).DisplayName, result.Data.First(sku => sku.Id == GetSkuModel(2).Id).DisplayName);
+        }
+
+        [TestMethod]
+        public void GetSkus_LogsError_IfRepoGetThrows()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Throws(new Exception(exceptionMessage));
+
+            string loggedMessage = null;
+            _mockLogger.Setup(logger => logger.LogError(It.IsAny<string>())).Callback((string str) => loggedMessage = str);
+
+            // Act
+            var result = _target.GetSkus();
+
+            // Assert
+            Assert.IsNotNull(loggedMessage);
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.GetSkus)}"));
+            Assert.IsTrue(loggedMessage.Contains("Error fetching SKUs"));
+            Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
+        }
+
+        [TestMethod]
+        public void GetSkus_ReturnsInternalServerError_IfExceptionThrown()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Throws(new Exception());
+
+            // Act
+            var result = _target.GetSkus();
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains("Error fetching SKUs"));
+        }
+
+        #endregion GetSkus
+
         #region CreateNewOrder
 
         [TestMethod]

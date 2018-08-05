@@ -1,5 +1,6 @@
 ﻿using CheckoutOrderService.Common;
 using CheckoutOrderService.Models;
+using System.Collections.Generic;
 
 namespace CheckoutOrderService
 {
@@ -8,6 +9,11 @@ namespace CheckoutOrderService
     /// </summary>
     public interface IOrderService
     {
+        /// <summary>
+        /// Returns a collection of <see cref="SkuModel"/> objects
+        /// </summary>
+        ServiceResponse<IEnumerable<SkuModel>> GetSkus();
+
         /// <summary>
         /// Creates a persistent <see cref="OrderModel"/> object to track changes after an order is created
         /// </summary>

@@ -20,6 +20,21 @@ namespace CheckoutOrderService
         }
 
         /// <inheritdoc />
+        public ServiceResponse<IEnumerable<SkuModel>> GetSkus()
+        {
+            try
+            {                
+                return new ServiceResponse<IEnumerable<SkuModel>>(_repository.Get<SkuModel>(sku => true));
+            }
+            catch (Exception e)
+            {
+                var publicErrorMessage = "Error fetching SKUs";
+                LogError(nameof(GetSkus), publicErrorMessage, $"{e.Message} StackTrace: {e.StackTrace}");
+                return new ServiceResponse<IEnumerable<SkuModel>>(ServiceError.InternalServerError, publicErrorMessage);
+            }                
+        }
+
+        /// <inheritdoc />
         public ServiceResponse<int> CreateNewOrder(OrderModel order = null)
         {
             try
