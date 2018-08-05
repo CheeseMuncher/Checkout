@@ -13,6 +13,7 @@ using Ninject.Activation;
 using Ninject.Infrastructure.Disposal;
 using System;
 using System.Threading;
+//using System.Web.Http;
 
 namespace CheckoutApi
 {
@@ -81,5 +82,20 @@ namespace CheckoutApi
         }
 
         private sealed class Scope : DisposableObject { }
+
+    //    public static class WebApiConfig
+    //    {
+    //        public static void Register(HttpConfiguration config)
+    //        {
+    //            // New code
+    //            config.EnableCors();
+
+    //            config.Routes.MapHttpRoute(
+    //                name: "DefaultApi",
+    //                routeTemplate: "api/{controller}/{id}",
+    //                defaults: new { id = RouteParameter.Optional }
+    //            );
+    //        }
+    //    }
     }
 }

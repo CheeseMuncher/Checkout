@@ -17,6 +17,7 @@ namespace CheckoutApi.IoC
         {
             Bind<IMapper>().ToMethod(AutoMapper).InSingletonScope();
             Bind<IValidator<Order>>().To<OrderValidator>();
+            Bind<IValidator<OrderLine>>().To<OrderLineValidator>();
         }
         
         private IMapper AutoMapper(Ninject.Activation.IContext context)

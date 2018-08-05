@@ -6,11 +6,14 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Net;
+//using System.Web.Http.Cors;
+
 
 namespace CheckoutApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[EnableCors(origins: "http://localhost:45000/orders.html", headers: "*", methods: "*")]
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
