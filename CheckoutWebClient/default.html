@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <title>Checkout</title>
+  </head>
+  <body>
+    <div>
+        Please login to the Checkout.com order prototype        
+    </div>
+    <div id="login">
+        Password
+        <input v-model="password" placeholder="password" type="password" />
+        <button v-on:click="checkPassword">Login</button>
+        <br/>
+        {{ message }}
+    </div>
+
+    <script src="https://unpkg.com/vue@2.2.5/dist/vue.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        new Vue({
+            el: '#login',
+            data () {                
+                return {
+                password: null,
+                message: null
+                }
+            },
+            methods : {
+                checkPassword: function(event) {
+                    this.message = "";
+                    if(this.password == ".Test1ng")
+                    {
+                        window.location.href = "orders.html"
+                    }
+                    else
+                    {
+                        this.message = "Wrong password. Please try again."
+                    }                
+                }
+            }
+        });
+    </script>
+</body>
+</html>

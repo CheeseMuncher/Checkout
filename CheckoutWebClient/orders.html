@@ -1,0 +1,43 @@
+<html>
+    <head>
+        <title>Orders</title>
+    </head>
+    <body>
+        <div>
+            Please select an order
+        </div>
+        <div id="orders">
+            {{ message }}<br/>
+            <li v-for="(item, index) in myOrders">
+                Order Id: {{ item.id }} <button v-on:click="getOrder(item.id)">Select</button>
+            </li>
+        </div>
+    </body>
+</html>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue@2.2.5/dist/vue.js" type="text/javascript"></script>
+<script type="text/javascript">
+    new Vue({
+        el: '#orders',
+        data () {                
+            return {
+                message: null,
+                myOrders: []
+            }
+        },
+        mounted () {
+            axios
+            .get('https://localhost:44315/api/orders')
+            .then(response => {
+                this.myOrders = response.data;
+            })
+            .catch(function (error) {
+                console.log(error.message);
+                this.message = error.message
+            })
+        },
+    });
+</script>
+
+
+      
