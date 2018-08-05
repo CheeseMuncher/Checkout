@@ -117,6 +117,33 @@ namespace CheckoutOrderServiceTests
             Assert.IsTrue(result.ErrorMessages.Contains("Error fetching SKUs"));
         }
 
+        [TestMethod]
+        public void GetSkus_RepoGetReturnsDummyData()
+        {
+            // Arrange
+            _mockRepository
+                .Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>()))
+                .Returns((Expression<Func<SkuModel, bool>> predicate) => new Repository().Get(predicate));
+
+            IEnumerable<SkuModel> result = null;
+
+            // Act
+            try
+            {
+                result = _target.GetSkus().Data;
+            }
+
+            // Assert
+            catch (Exception e)
+            {
+                Assert.Fail("Repository was not supposed to throw, consider adding a new test");
+            }
+            finally
+            {
+                Assert.AreEqual(4, result.Count(), "Hard-coded values have changed, consider replacing this test with new ones");
+            }
+        }
+
         #endregion GetSkus
 
         #region CreateNewOrder
