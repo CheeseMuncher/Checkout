@@ -146,6 +146,76 @@ namespace CheckoutOrderServiceTests
 
         #endregion GetSkus
 
+        #region GetOrders
+
+        [TestMethod]
+        public void GetOrders_InvokesRepoGetWithCorrectArguments()
+        {
+            // Arrange
+            Expression<Func<OrderModel, bool>> predicate = sku => true;
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Callback((Expression<Func<OrderModel, bool>> exp) => predicate = exp);
+
+            // Act
+            _target.GetOrders();
+
+            // Assert
+            Assert.IsNull(predicate);
+        }
+
+        [TestMethod]
+        public void GetOrders_ReturnsRepoResult()
+        {
+            // Arrange
+            var order1 = new OrderModel { Id = 1, Lines = new List<OrderLineModel> { new OrderLineModel(2, GetSkuModel(1)) } };
+            var order2 = new OrderModel { Id = 2, Lines = new List<OrderLineModel>() };
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { order1, order2 });
+
+            // Act
+            var result = _target.GetOrders();
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+            Assert.AreEqual(2, result.Data.Count());
+            Assert.AreEqual(0, result.Data.First(order => order.Id == 2).Lines.Count);
+            Assert.AreEqual(2, result.Data.First(order => order.Id == 1).Lines.First().Id);            
+        }
+
+        [TestMethod]
+        public void GetOrders_LogsError_IfRepoGetThrows()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Throws(new Exception(exceptionMessage));
+
+            string loggedMessage = null;
+            _mockLogger.Setup(logger => logger.LogError(It.IsAny<string>())).Callback((string str) => loggedMessage = str);
+
+            // Act
+            var result = _target.GetOrders();
+
+            // Assert
+            Assert.IsNotNull(loggedMessage);
+            Assert.IsTrue(loggedMessage.StartsWith($"{nameof(OrderService)}.{nameof(OrderService.GetOrders)}"));
+            Assert.IsTrue(loggedMessage.Contains("Error fetching Orders"));
+            Assert.IsTrue(loggedMessage.Contains(exceptionMessage));
+        }
+
+        [TestMethod]
+        public void GetOrders_ReturnsInternalServerError_IfExceptionThrown()
+        {
+            // Arrange
+            _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Throws(new Exception());
+
+            // Act
+            var result = _target.GetOrders();
+
+            // Assert
+            Assert.IsFalse(result.IsSuccessful);
+            Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
+            Assert.IsTrue(result.ErrorMessages.Contains("Error fetching Orders"));
+        }
+
+        #endregion GetOrders
+
         #region CreateNewOrder
 
         [TestMethod]

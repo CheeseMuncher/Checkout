@@ -23,7 +23,7 @@ namespace CheckoutOrderService
         public ServiceResponse<IEnumerable<SkuModel>> GetSkus()
         {
             try
-            {                
+            {
                 return new ServiceResponse<IEnumerable<SkuModel>>(_repository.Get<SkuModel>(sku => true));
             }
             catch (Exception e)
@@ -32,6 +32,21 @@ namespace CheckoutOrderService
                 LogError(nameof(GetSkus), publicErrorMessage, $"{e.Message} StackTrace: {e.StackTrace}");
                 return new ServiceResponse<IEnumerable<SkuModel>>(ServiceError.InternalServerError, publicErrorMessage);
             }                
+        }
+
+        /// <inheritdoc />
+        public ServiceResponse<IEnumerable<OrderModel>> GetOrders()
+        {
+            try
+            {
+                return new ServiceResponse<IEnumerable<OrderModel>>(_repository.Get<OrderModel>(null));
+            }
+            catch (Exception e)
+            {
+                var publicErrorMessage = "Error fetching Orders";
+                LogError(nameof(GetOrders), publicErrorMessage, $"{e.Message} StackTrace: {e.StackTrace}");
+                return new ServiceResponse<IEnumerable<OrderModel>>(ServiceError.InternalServerError, publicErrorMessage);
+            }
         }
 
         /// <inheritdoc />
@@ -168,8 +183,8 @@ namespace CheckoutOrderService
         }
         
         /// <summary>
-                 /// Validates the supplied input line against the supplied order
-                 /// </summary>
+        /// Validates the supplied input line against the supplied order
+        /// </summary>
         private ServiceResponse<int> ValidateOrderLine(OrderModel order, OrderLineModel line, string publicErrorMessage)
         {
             if (order.Lines == null)

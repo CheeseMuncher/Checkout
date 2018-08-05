@@ -15,6 +15,11 @@ namespace CheckoutOrderService
         ServiceResponse<IEnumerable<SkuModel>> GetSkus();
 
         /// <summary>
+        /// Returns a collection of <see cref="OrderModel"/> objects
+        /// </summary>
+        ServiceResponse<IEnumerable<OrderModel>> GetOrders();
+
+        /// <summary>
         /// Creates a persistent <see cref="OrderModel"/> object to track changes after an order is created
         /// </summary>
         /// <param name="order">The new order to be created, an empty order otherwise</param>
