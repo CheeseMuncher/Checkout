@@ -1,0 +1,243 @@
+{
+	"info": {
+		"_postman_id": "f2d726d2-4acb-4e84-8118-f55e7259ce4f",
+		"name": "CheckoutApi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"_postman_id": "701ebca2-fc4f-423b-a9a1-b44528ad84ee",
+			"name": "Orders",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "https://localhost:{{port}}/api/orders/",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"orders",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"_postman_id": "d2f07777-4d83-413d-8887-7cfb30cc9fac",
+			"name": "Skus",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "https://localhost:{{port}}/api/skus/",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"skus",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"_postman_id": "24e98e19-4a68-4def-b706-5b9b4e11d921",
+			"name": "Order",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "https://localhost:{{port}}/api/orders/{{orderId}}",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"orders",
+						"{{orderId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"_postman_id": "3d3e9fc7-94e5-42e6-83aa-0203c00f5fd4",
+			"name": "Order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"id\": 7,\n\t\"lines\": []\n}"
+				},
+				"url": {
+					"raw": "https://localhost:{{port}}/api/orders",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"_postman_id": "ba8303a1-fde4-4830-85d8-246639b7b6f9",
+			"name": "Order Line",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"quantity\": 7,\n\t\"skuCode\": \"Sku123\"\n}"
+				},
+				"url": {
+					"raw": "https://localhost:{{port}}/api/orders/{{orderId}}",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"orders",
+						"{{orderId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"_postman_id": "91366528-0409-40c3-a878-5d611d9a042b",
+			"name": "OrderLine",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://localhost:{{port}}/api/orders/{{orderId}}?orderLineId=2",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"orders",
+						"{{orderId}}"
+					],
+					"query": [
+						{
+							"key": "orderLineId",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"_postman_id": "dd075cb2-0d3a-4a84-ada4-7be040a11f57",
+			"name": "Order",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "https://localhost:{{port}}/api/orders/{{orderId}}",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"orders",
+						"{{orderId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "b96a9864-c0c5-46d5-9c3c-3dbdcb4b2233",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "81525661-e227-4e5c-83af-5817da7cff5c",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "bc06c563-9fec-4bc0-9ea9-3d0521074160",
+			"key": "port",
+			"value": "44315",
+			"type": "string"
+		},
+		{
+			"id": "659734cb-8e96-4ab9-bc44-bbea974a56d0",
+			"key": "orderId",
+			"value": "2",
+			"type": "string"
+		}
+	]
+}
