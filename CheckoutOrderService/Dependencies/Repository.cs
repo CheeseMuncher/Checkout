@@ -59,7 +59,8 @@ namespace CheckoutOrderService.Dependencies
 
          /// <summary>
         /// Need hard coded data for demo
-        /// TODO Remove when repository is wired up
+        /// TODO Remove when repository is wired up. 
+        /// This will break a test which should be removed along with an update to <see cref="SkuModel"/>
         /// </summary>  
         private OrderModel[] GetNewDemoOrders()
         {
