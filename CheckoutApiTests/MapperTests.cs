@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CheckoutApi.Mappers;
+using CheckoutApi.Models;
 using CheckoutOrderService.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
@@ -15,7 +16,11 @@ namespace CheckoutApiTests
         [TestInitialize]
         public void TestInit()
         {
-            _target = new MapperConfiguration(cfg => cfg.AddProfile(new OrderMapper())).CreateMapper();
+            _target = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new OrderMapper());
+                cfg.AddProfile(new SkuMapper());
+            }).CreateMapper();
         }
 
         [TestMethod]
@@ -177,6 +182,32 @@ namespace CheckoutApiTests
             Assert.AreEqual(serviceOrderModel.Lines.Count, result.Lines.Count);
             Assert.IsTrue(result.Lines.Any(line => line.Id == apiLineModel1.Id));
             Assert.IsTrue(result.Lines.Any(line => line.Id == apiLineModel2.Id));
+        }
+
+        [TestMethod]
+        public void SkuMapper_Outbound_MapsPropertiesFromServiceSkuModelByName()
+        {
+            // Arrange
+            var serviceModel = new SkuModel(string.Empty, "Test1");
+
+            // Act
+            var result = _target.Map<SkuModel, Sku>(serviceModel);
+
+            // Assert
+            Assert.AreEqual(serviceModel.DisplayName, result.DisplayName);
+        }
+
+        [TestMethod]
+        public void SkuMapper_Outbound_MapsCodeFromServiceSkuModel()
+        {
+            // Arrange
+            var serviceModel = new SkuModel("Test1", string.Empty);
+
+            // Act
+            var result = _target.Map<SkuModel, Sku>(serviceModel);
+
+            // Assert
+            Assert.AreEqual(serviceModel.Id, result.Code);
         }
     }
 }

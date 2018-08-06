@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CheckoutApi.Models;
 using CheckoutOrderService;
 using CheckoutOrderService.Common;
 using CheckoutOrderService.Models;
@@ -7,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Net;
 //using System.Web.Http.Cors;
-
 
 namespace CheckoutApi.Controllers
 {
@@ -29,15 +29,28 @@ namespace CheckoutApi.Controllers
             _orderLineValidator = orderLineValidator;
         }
 
+        [HttpGet(Name = "GetSkus")]
+        public ActionResult<IEnumerable<SkuModel>> GetSkus()
+        {
+            var response = _orderService.GetSkus();
+            if (!response.IsSuccessful)
+            {
+                return ProcessServiceFailure(response) as ActionResult;
+            }
+            var skus = _mapper.Map<IEnumerable<SkuModel>, IEnumerable<Sku>>(response.Data);
+            return Ok(skus);
+        }
+
         [HttpGet]
         public ActionResult<IEnumerable<Order>> Get()
         {
-            return new List<Order>
+            var response = _orderService.GetOrders();
+            if (!response.IsSuccessful)
             {
-                new Order { Lines = new List<OrderLine> { new OrderLine { SkuCode = "Hello World 1" } } },
-                new Order { Lines = new List<OrderLine> { new OrderLine { SkuCode = "Hello World 2" } } },
-                new Order { Lines = new List<OrderLine> { new OrderLine { SkuCode = "Hello World 3" } } }
-            };                
+                return ProcessServiceFailure(response) as ActionResult;
+            }
+            var orders = _mapper.Map<IEnumerable<OrderModel>, IEnumerable<Order>>(response.Data);
+            return Ok(orders);
         }
 
         [HttpGet("{orderId}", Name = "GetOrder")]

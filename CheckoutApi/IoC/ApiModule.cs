@@ -26,6 +26,7 @@ namespace CheckoutApi.IoC
             {
                 config.ConstructServicesUsing(type => context.Kernel.Get(type));
                 config.AddProfile(new OrderMapper());
+                config.AddProfile(new SkuMapper());
             });
 
             return Mapper.Instance;
