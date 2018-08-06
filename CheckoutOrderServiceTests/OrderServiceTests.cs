@@ -4,8 +4,10 @@ using CheckoutOrderService.Dependencies;
 using CheckoutOrderService.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -143,12 +145,12 @@ namespace CheckoutOrderServiceTests
                 Assert.AreEqual(4, result.Count(), "Hard-coded values have changed, consider replacing this test with new ones");
             }
         }
+    
+    #endregion GetSkus
 
-        #endregion GetSkus
+    #region GetOrders
 
-        #region GetOrders
-
-        [TestMethod]
+    [TestMethod]
         public void GetOrders_InvokesRepoGetWithCorrectArguments()
         {
             // Arrange
@@ -212,6 +214,38 @@ namespace CheckoutOrderServiceTests
             Assert.IsFalse(result.IsSuccessful);
             Assert.AreEqual(ServiceError.InternalServerError, result.ServiceError);
             Assert.IsTrue(result.ErrorMessages.Contains("Error fetching Orders"));
+        }
+
+        /// <summary>
+        /// TODO Remove serialisation attribute in <see cref="SkuModel" when this test is removed/>
+        /// </summary>
+        [TestMethod]
+        public void GetOrders_SerialisesSkuData()
+        {
+            // Arrange
+            var path = $"{Environment.CurrentDirectory}\\Resources\\DemoData.json";
+            if (!File.Exists(path))
+            {
+                if (!Directory.Exists(path.Substring(0, path.Length - 14)))
+                {
+                    Directory.CreateDirectory(path.Substring(0, path.Length - 14));
+                }
+                File.Create(path).Close();
+            }
+            var order = new OrderModel { Id = 1, Lines = new List<OrderLineModel> { new OrderLineModel(2, GetSkuModel(3)) } };
+            File.WriteAllText(path, JsonConvert.SerializeObject(new[] { order }));
+
+            _mockRepository
+                .Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>()))
+                .Returns(JsonConvert.DeserializeObject<OrderModel[]>(File.ReadAllText(path)));
+
+            // Act
+            var result = _target.GetOrders();
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+            Assert.AreEqual(1, result.Data.First().Lines.Count);
+            Assert.AreEqual(order.Lines.First().Sku.DisplayName, result.Data.First().Lines.First().Sku.DisplayName);
         }
 
         #endregion GetOrders

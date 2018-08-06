@@ -1,4 +1,6 @@
-﻿namespace CheckoutOrderService.Models
+﻿using Newtonsoft.Json;
+
+namespace CheckoutOrderService.Models
 {
     /// <summary>
     /// Representation of a sku in the persistence layer
@@ -12,6 +14,7 @@
         }
 
         public string Id { get; }
-        public string DisplayName { get; }
+        [JsonProperty]
+        public string DisplayName { get; private set; }
     }
 }
