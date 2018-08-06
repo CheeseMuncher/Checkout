@@ -29,18 +29,6 @@ namespace CheckoutApi.Controllers
             _orderLineValidator = orderLineValidator;
         }
 
-        [HttpGet(Name = "GetSkus")]
-        public ActionResult<IEnumerable<SkuModel>> GetSkus()
-        {
-            var response = _orderService.GetSkus();
-            if (!response.IsSuccessful)
-            {
-                return ProcessServiceFailure(response) as ActionResult;
-            }
-            var skus = _mapper.Map<IEnumerable<SkuModel>, IEnumerable<Sku>>(response.Data);
-            return Ok(skus);
-        }
-
         [HttpGet]
         public ActionResult<IEnumerable<Order>> Get()
         {
