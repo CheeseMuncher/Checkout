@@ -1,0 +1,100 @@
+<html>
+    <head>
+        <title>Order Editor</title>
+    </head>
+    <body>
+        <div id="skus">
+            {{ message }}<br/>
+            Add new SKU to order: 
+            <select v-model="selectedSku" id="skuList" >
+                <option v-for="sku in availableSkus" v-bind:value="sku.code">
+                    {{sku.displayName}}
+                </option>
+            </select>
+            <!-- <button v-on:click="addSku">Add Sku to Order</button> -->
+        </div>
+        <div id="order">
+            Order# {{ orderId }}:{{ message }}<br/>
+            <table>
+            <template v-for="line in orderBy(lines, 'sortOrder')">
+                    <tr>
+                        <td>
+                            {{ line.skuDisplayName }}
+                        </td>
+                        <td>
+                            <input v-model="line.quantity" />
+                        </td>
+                    </tr>
+                </template>                
+            </table>
+        </div>
+        </body>
+</html>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vue@2.2.5/dist/vue.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue2-filters/dist/vue2-filters.min.js"></script>
+<script type="text/javascript">
+    new Vue({
+        el: '#skus',
+        data () {                
+            return {
+                message: null,
+                selectedSku: null,
+                availableSkus: []
+            }
+        },
+        mounted(){
+            axios
+            .get('https://localhost:44315/api/skus')
+            .then(response => {
+                this.availableSkus = response.data;
+                if(this.availableSkus.length > 0)
+                {
+                    this.selectedSku = this.availableSkus[0].code;
+                }
+            })
+            .catch(function (error) {
+                console.log(error.message);
+                this.message = error.message
+            })
+        }
+    })
+    new Vue({
+        el: '#order',
+        data () {                
+            return {
+                message: null,
+                orderId: null,
+                lines: [],
+            }
+        },
+        created() { 
+            let uri = window.location.search.substring(1); 
+            let params = new URLSearchParams(uri);
+            if(params.has("id")) {
+                this.orderId = params.get("id");
+            }
+            else {
+                this.message = "No Order id specified"
+            }
+        },
+        mounted () {
+            var vm = this;
+            if (this.orderId != null) {
+                axios
+                .get("https://localhost:44315/api/orders/" + this.orderId)
+                .then(response => {
+                    this.lines = response.data.lines;
+                    this.message = response.data.errors
+                })
+                .catch(function (error) {
+                    console.log(error.message);
+                    vm.message = error.response.data; // TODO: this.message = doesn't update the view
+                })
+            }
+        },
+    });
+</script>
+
+
+      

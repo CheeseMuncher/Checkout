@@ -36,6 +36,12 @@
                 this.message = error.message
             })
         },
+        methods : {
+            getOrder: function(id, event) {
+                this.message = "Fetching order with Id " + id;
+                window.location.href = "order.html?id=" + id 
+            },
+        }
     });
 </script>
 
