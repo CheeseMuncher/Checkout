@@ -54,7 +54,7 @@ namespace CheckoutOrderService
         {
             try
             {
-                var repoOrder = _repository.Save(order ?? new OrderModel());
+                var repoOrder = _repository.Save(order ?? new OrderModel(0));
                 return new ServiceResponse<int>(repoOrder.Id);
             }
             catch (Exception e)

@@ -64,9 +64,8 @@ namespace CheckoutOrderService.Dependencies
         /// </summary>  
         private OrderModel[] GetNewDemoOrders()
         {
-            var order1 = new OrderModel
+            var order1 = new OrderModel(1)
             {
-                Id = 1,
                 Lines = new List<OrderLineModel>
                     {
                         new OrderLineModel(1, new SkuModel("A1", "Product A1")) { SortOrder = 10, Quantity = 2 },
@@ -74,9 +73,8 @@ namespace CheckoutOrderService.Dependencies
                         new OrderLineModel(3, new SkuModel("B1", "Product B1")) { SortOrder = 30, Quantity = 8 }
                     }
             };
-            var order2 = new OrderModel
+            var order2 = new OrderModel(2)
             {
-                Id = 2,
                 Lines = new List<OrderLineModel>
                     {
                         new OrderLineModel(4, new SkuModel("A3", "Product A3")) { SortOrder = 10, Quantity = 3 },

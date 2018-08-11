@@ -145,12 +145,12 @@ namespace CheckoutOrderServiceTests
                 Assert.AreEqual(4, result.Count(), "Hard-coded values have changed, consider replacing this test with new ones");
             }
         }
-    
-    #endregion GetSkus
 
-    #region GetOrders
+        #endregion GetSkus
 
-    [TestMethod]
+        #region GetOrders
+
+        [TestMethod]
         public void GetOrders_InvokesRepoGetWithCorrectArguments()
         {
             // Arrange
@@ -168,8 +168,8 @@ namespace CheckoutOrderServiceTests
         public void GetOrders_ReturnsRepoResult()
         {
             // Arrange
-            var order1 = new OrderModel { Id = 1, Lines = new List<OrderLineModel> { new OrderLineModel(2, GetSkuModel(1)) } };
-            var order2 = new OrderModel { Id = 2, Lines = new List<OrderLineModel>() };
+            var order1 = new OrderModel(1) { Lines = new List<OrderLineModel> { new OrderLineModel(2, GetSkuModel(1)) } };
+            var order2 = new OrderModel(2) { Lines = new List<OrderLineModel>() };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { order1, order2 });
 
             // Act
@@ -232,7 +232,7 @@ namespace CheckoutOrderServiceTests
                 }
                 File.Create(path).Close();
             }
-            var order = new OrderModel { Id = 1, Lines = new List<OrderLineModel> { new OrderLineModel(2, GetSkuModel(3)) } };
+            var order = new OrderModel(1) { Lines = new List<OrderLineModel> { new OrderLineModel(2, GetSkuModel(3)) } };
             File.WriteAllText(path, JsonConvert.SerializeObject(new[] { order }));
 
             _mockRepository
@@ -260,7 +260,7 @@ namespace CheckoutOrderServiceTests
             _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Callback((OrderModel order) => savePayload = order);
 
             // Act
-            _target.CreateNewOrder(new OrderModel { Id = orderId });
+            _target.CreateNewOrder(new OrderModel(orderId));
 
             // Assert
             Assert.IsNotNull(savePayload);
@@ -286,10 +286,10 @@ namespace CheckoutOrderServiceTests
         public void CreateNewOrder_ReturnsRepoResponseId()
         {
             // Arrange
-            _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Returns(new OrderModel { Id = orderId });
+            _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Returns(new OrderModel(orderId));
 
             // Act
-            var result = _target.CreateNewOrder(new OrderModel());
+            var result = _target.CreateNewOrder(new OrderModel(0));
 
             // Assert
             Assert.IsTrue(result.IsSuccessful);
@@ -303,7 +303,7 @@ namespace CheckoutOrderServiceTests
             _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception());
 
             // Act
-            var result = _target.CreateNewOrder(new OrderModel());
+            var result = _target.CreateNewOrder(new OrderModel(0));
 
             // Assert
             Assert.IsFalse(result.IsSuccessful);
@@ -321,7 +321,7 @@ namespace CheckoutOrderServiceTests
             _mockLogger.Setup(logger => logger.LogError(It.IsAny<string>())).Callback((string str) => loggedMessage = str);
 
             // Act
-            var result = _target.CreateNewOrder(new OrderModel());
+            var result = _target.CreateNewOrder(new OrderModel(0));
 
             // Assert
             Assert.IsNotNull(loggedMessage);
@@ -347,8 +347,8 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsNotNull(predicate);
 
-            var matchingOrder = new OrderModel { Id = orderId };
-            var otherOrder = new OrderModel { Id = orderId + 1 };
+            var matchingOrder = new OrderModel(orderId);
+            var otherOrder = new OrderModel(orderId + 1);
 
             var func = predicate.Compile();
             Assert.IsTrue(func(matchingOrder));
@@ -390,7 +390,7 @@ namespace CheckoutOrderServiceTests
         {
             // Arrange
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>()))
-                .Returns(() => new List<OrderModel> { new OrderModel { Id = orderId }, new OrderModel { Id = orderId } });
+                .Returns(() => new List<OrderModel> { new OrderModel(orderId), new OrderModel(orderId) });
 
             // Act
             var result = _target.GetOrder(orderId);
@@ -407,7 +407,7 @@ namespace CheckoutOrderServiceTests
             // Arrange
             _mockRepository
                 .Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>()))
-                .Returns(() => new List<OrderModel> { new OrderModel { Id = orderId }, new OrderModel { Id = orderId } });
+                .Returns(() => new List<OrderModel> { new OrderModel(orderId), new OrderModel(orderId) });
 
             string loggedMessage = null;
             _mockLogger.Setup(logger => logger.LogError(It.IsAny<string>())).Callback((string str) => loggedMessage = str);
@@ -429,7 +429,7 @@ namespace CheckoutOrderServiceTests
             // Arrange
             _mockRepository
                 .Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>()))
-                .Returns(() => new List<OrderModel> { new OrderModel { Id = orderId } });
+                .Returns(() => new List<OrderModel> { new OrderModel(orderId) });
 
             // Act
             var result = _target.GetOrder(orderId);
@@ -490,8 +490,8 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsNotNull(predicate);
 
-            var matchingOrder = new OrderModel { Id = orderId };
-            var otherOrder = new OrderModel { Id = orderId + 1 };
+            var matchingOrder = new OrderModel(orderId);
+            var otherOrder = new OrderModel(orderId + 1);
 
             var func = predicate.Compile();
             Assert.IsTrue(func(matchingOrder));
@@ -534,7 +534,7 @@ namespace CheckoutOrderServiceTests
         public void ClearOrder_ReturnsSuccess_IfOrderLinesNull()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => new List<OrderModel> { repoOrder });
 
             // Act
@@ -549,7 +549,7 @@ namespace CheckoutOrderServiceTests
         public void ClearOrder_ReturnsSuccess_IfOrderLinesEmpty()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel>() };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel>() };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => new List<OrderModel> { repoOrder });
 
             // Act
@@ -566,7 +566,7 @@ namespace CheckoutOrderServiceTests
             // Arrange
             var line1 = GetOrderLine(orderLineId);
             var line2 = GetOrderLine(orderLineId + 1);
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { line1, line2 } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { line1, line2 } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             OrderModel savePayload = null;
@@ -585,7 +585,7 @@ namespace CheckoutOrderServiceTests
         public void ClearOrder_ReturnsSuccess_AfterOrderLinesDeleted()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             // Act
@@ -599,7 +599,7 @@ namespace CheckoutOrderServiceTests
         public void ClearOrder_ReturnsInternalServerError_IfExceptionThrown()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception());
@@ -617,7 +617,7 @@ namespace CheckoutOrderServiceTests
         public void ClearOrder_LogsError_IfExceptionThrown()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception(exceptionMessage));
@@ -652,8 +652,8 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsNotNull(predicate);
 
-            var matchingOrder = new OrderModel { Id = orderId };
-            var otherOrder = new OrderModel { Id = orderId + 1 };
+            var matchingOrder = new OrderModel(orderId);
+            var otherOrder = new OrderModel(orderId + 1);
 
             var func = predicate.Compile();
             Assert.IsTrue(func(matchingOrder));
@@ -696,7 +696,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_ReturnsInternalServerError_IfOrderHasMultipleMatchingLines()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId), GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId), GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             // Act
@@ -713,7 +713,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_LogsError_IfOrderHasMultipleMatchingLines()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId), GetOrderLine(orderLineId), GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId), GetOrderLine(orderLineId), GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             string loggedMessage = null;
@@ -734,7 +734,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_UpdatesCorrespondingOrderLine_IfItExists()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             OrderModel savePayload = null;
@@ -757,7 +757,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_ReturnsInputLineId_IfItExists()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             // Act
@@ -773,7 +773,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_InitialisesOrderLines_IfNull()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             // Act
@@ -787,7 +787,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_ReturnsBadRequest_IfOrderAlreadyHasLineWithMatchingSku()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             var newLine = GetOrderLine(orderLineId + 1, orderLineId);
@@ -806,7 +806,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_InvokesRepoGetWithCorrectArguments_IfLineIsNew()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             Expression<Func<SkuModel, bool>> predicate = null;
@@ -832,7 +832,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_ReturnsBadRequest_IfRepoGetResultIsNull()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Returns(() => null);
@@ -853,7 +853,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_ReturnsBadRequest_IfRepoGetResultIsEmpty()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Returns(new List<SkuModel>());
@@ -874,7 +874,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_ReturnsInternalServerError_IfRepoGetReturnsMultipleSkuResults()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             var skuModel = GetSkuModel(orderLineId);
@@ -893,7 +893,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_LogsError_IfRepoGetReturnsMultipleSkuResults()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             var skuModel = GetSkuModel(orderLineId);
@@ -917,7 +917,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_SavesOrder_IfOrderLineIsNewAndValid()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Returns(new List<SkuModel> { GetSkuModel(orderLineId) });
@@ -926,7 +926,7 @@ namespace CheckoutOrderServiceTests
             _mockRepository
                 .Setup(repo => repo.Save(It.IsAny<OrderModel>()))
                 .Callback((OrderModel order) => savePayload = order)
-                .Returns(new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId + 1) } });
+                .Returns(new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId + 1) } });
 
             var newLine = GetOrderLine(orderLineId + 1);
 
@@ -945,12 +945,12 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_ReturnsInputRepoSaveLineId_IfOrderLineIsNewAndValid()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Returns(new List<SkuModel> { GetSkuModel(orderLineId + 1) });
 
-            var updatedRepoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId), GetOrderLine(orderLineId + 1) } };
+            var updatedRepoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId), GetOrderLine(orderLineId + 1) } };
             _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Returns(updatedRepoOrder);
 
             // Act
@@ -966,7 +966,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_ReturnsInternalServerError_IfExceptionThrown()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Throws(new Exception());
@@ -984,7 +984,7 @@ namespace CheckoutOrderServiceTests
         public void UpdateOrderLine_LogsError_IfExceptionThrown()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<SkuModel, bool>>>())).Throws(new Exception(exceptionMessage));
@@ -1005,7 +1005,7 @@ namespace CheckoutOrderServiceTests
         #endregion UpdateOrderLine
 
         #region DeleteOrderLine
-        
+
         [TestMethod]
         public void DeleteOrderLine_FetchesCorrespondingOrder()
         {
@@ -1019,8 +1019,8 @@ namespace CheckoutOrderServiceTests
             // Assert
             Assert.IsNotNull(predicate);
 
-            var matchingOrder = new OrderModel { Id = orderId };
-            var otherOrder = new OrderModel { Id = orderId + 1 };
+            var matchingOrder = new OrderModel(orderId);
+            var otherOrder = new OrderModel(orderId + 1);
 
             var func = predicate.Compile();
             Assert.IsTrue(func(matchingOrder));
@@ -1063,7 +1063,7 @@ namespace CheckoutOrderServiceTests
         public void DeleteOrderLine_ReturnsBadRequest_IfOrderLinesNull()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId };
+            var repoOrder = new OrderModel(orderId);
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => new List<OrderModel> { repoOrder });
 
             // Act
@@ -1080,7 +1080,7 @@ namespace CheckoutOrderServiceTests
         public void DeleteOrderLine_ReturnsBadRequest_IfOrderDoesNotContainLine()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId + 1) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId + 1) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(() => new List<OrderModel> { repoOrder });
 
             // Act
@@ -1099,7 +1099,7 @@ namespace CheckoutOrderServiceTests
             // Arrange
             var lineToDelete = GetOrderLine(orderLineId);
             var otherOrderLine = GetOrderLine(orderLineId + 1);
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { lineToDelete, otherOrderLine } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { lineToDelete, otherOrderLine } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             OrderModel savePayload = null;
@@ -1119,7 +1119,7 @@ namespace CheckoutOrderServiceTests
         public void DeleteOrderLine_ReturnsSuccess_AfterOrderLineDeleted()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             // Act
@@ -1133,7 +1133,7 @@ namespace CheckoutOrderServiceTests
         public void DeleteOrderLine_ReturnsInternalServerError_IfExceptionThrown()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception());
@@ -1151,7 +1151,7 @@ namespace CheckoutOrderServiceTests
         public void DeleteOrderLine_LogsError_IfExceptionThrown()
         {
             // Arrange
-            var repoOrder = new OrderModel { Id = orderId, Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
+            var repoOrder = new OrderModel(orderId) { Lines = new List<OrderLineModel> { GetOrderLine(orderLineId) } };
             _mockRepository.Setup(repo => repo.Get(It.IsAny<Expression<Func<OrderModel, bool>>>())).Returns(new List<OrderModel> { repoOrder });
 
             _mockRepository.Setup(repo => repo.Save(It.IsAny<OrderModel>())).Throws(new Exception(exceptionMessage));
