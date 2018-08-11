@@ -14,15 +14,23 @@
             <button v-on:click="addSku(selectedSku)">Add Sku to Order</button>
         </div>
         <div id="order">
-            Order# {{ orderId }}:{{ message }}<br/>
+            Order# {{ orderId }}:
+            <button v-on:click="clearOrder">Clear All Lines</button>
+            {{ message }}<br/>
             <table>
-            <template v-for="line in orderBy(lines, 'sortOrder')">
+                <template v-for="line in orderBy(lines, 'sortOrder')">
                     <tr>
                         <td>
                             {{ line.skuDisplayName }}
                         </td>
                         <td>
                             <input v-model="line.quantity" />
+                        </td>
+                        <td>
+                            <button v-on:click="updateQuantity(line)">Update</button>
+                        </td>
+                        <td>
+                            <button v-on:click="clearLine(line)">Remove</button>
                         </td>
                     </tr>
                 </template>                
@@ -129,6 +137,43 @@
                 })
             }
         },
+        methods : {
+            updateQuantity : function(line){
+                axios // TODO avoid invoking the server if button clicked but value hasn't changed
+                .put("https://localhost:44315/api/orders/" + this.orderId, {
+                        "id": line.id,
+                        "quantity": line.quantity,
+                        "skuCode": line.skuCode
+                }).then(response => { })
+                .catch(function (error) {
+                    console.log(error.message);
+                    this.message = error.response.status == 500 ? error.response.statusText : error.response.data;
+                })
+            },
+            clearLine : function(line){
+                axios
+                .delete("https://localhost:44315/api/orders/" + this.orderId + "?orderLineId=" + line.id)
+                .then(response => {
+                    index = this.lines.findIndex(l => l.skuCode === line.skuCode);
+                    this.lines.splice(index, 1);
+                 })
+                .catch(function (error) {
+                    console.log(error.message);
+                    this.message = error.response.status == 500 ? error.response.statusText : error.response.data;
+                })
+            },
+            clearOrder : function(){
+                axios
+                .delete("https://localhost:44315/api/orders/" + this.orderId)
+                .then(response => {
+                    this.lines = [];
+                 })
+                .catch(function (error) {
+                    console.log(error.message);
+                    this.message = error.response.status == 500 ? error.response.statusText : error.response.data;
+                })
+            }
+        }
     });
 </script>
 
