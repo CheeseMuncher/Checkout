@@ -7,11 +7,11 @@
             {{ message }}<br/>
             Add new SKU to order: 
             <select v-model="selectedSku" id="skuList" >
-                <option v-for="sku in availableSkus" v-bind:value="sku.code">
+                <option v-for="sku in availableSkus" v-bind:value="sku">
                     {{sku.displayName}}
                 </option>
             </select>
-            <!-- <button v-on:click="addSku">Add Sku to Order</button> -->
+            <button v-on:click="addSku(selectedSku)">Add Sku to Order</button>
         </div>
         <div id="order">
             Order# {{ orderId }}:{{ message }}<br/>
@@ -34,6 +34,7 @@
 <script src="https://unpkg.com/vue@2.2.5/dist/vue.js" type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue2-filters/dist/vue2-filters.min.js"></script>
 <script type="text/javascript">
+    Vue.prototype.$eventHub = new Vue(); // Global event bus
     new Vue({
         el: '#skus',
         data () {                
@@ -50,15 +51,20 @@
                 this.availableSkus = response.data;
                 if(this.availableSkus.length > 0)
                 {
-                    this.selectedSku = this.availableSkus[0].code;
+                    this.selectedSku = this.availableSkus[0];
                 }
             })
             .catch(function (error) {
                 console.log(error.message);
                 this.message = error.message
             })
+        },
+        methods : {
+            addSku : function(code){
+                this.$eventHub.$emit('addSku', code);
+            }
         }
-    })
+    });
     new Vue({
         el: '#order',
         data () {                
@@ -69,8 +75,8 @@
             }
         },
         created() { 
-            let uri = window.location.search.substring(1); 
-            let params = new URLSearchParams(uri);
+            var uri = window.location.search.substring(1); 
+            var params = new URLSearchParams(uri);
             if(params.has("id")) {
                 this.orderId = params.get("id");
             }
@@ -80,12 +86,42 @@
         },
         mounted () {
             var vm = this;
+            this.$eventHub.$on('addSku', function (payload) {
+                function checkSku(line){
+                    return line.skuCode === payload.code;
+                };
+                if(vm.lines.some(checkSku)) {
+                    vm.message = "Order already contains a line with this product";
+                }
+                else {
+                    axios
+                    .put("https://localhost:44315/api/orders/" + vm.orderId, {
+                            "quantity": 1,
+                            "skuCode": payload.code
+                    }).then(response => {
+                        var max = function(lines){
+                            return Math.max(...lines.map(line => line.sortOrder))
+                        }
+                        var newLine = {
+                            id: response.data,
+                            quantity: 1,
+                            skuCode: payload.code,
+                            skuDisplayName: payload.displayName,
+                            sortOrder: max(vm.lines) + 10                            
+                        }
+                        vm.lines.push(newLine)
+                    })
+                    .catch(function (error) {
+                        console.log(error.message);
+                        vm.message = error.response.status == 500 ? error.response.statusText : error.response.data;
+                    })
+                }
+            });            
             if (this.orderId != null) {
                 axios
                 .get("https://localhost:44315/api/orders/" + this.orderId)
                 .then(response => {
                     this.lines = response.data.lines;
-                    this.message = response.data.errors
                 })
                 .catch(function (error) {
                     console.log(error.message);
