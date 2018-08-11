@@ -5,34 +5,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.Serialization;
 
 namespace CheckoutOrderService.Dependencies
 {
     /// <inheritdoc />
     public class Repository : IRepository
     {
-        private readonly string path = $"{Environment.CurrentDirectory}\\Resources\\DemoData.json";
-
         /// <inheritdoc />
         public IEnumerable<T> Get<T>(Expression<Func<T, bool>> predicate)
         {
-            if (typeof(T) == typeof(SkuModel))
-            {
-                return GetDemoSkus() as IEnumerable<T>;
-            }
-            if (typeof(T) == typeof(OrderModel))
-            {
-                return predicate == null
-                    ? GetDemoOrders() as IEnumerable<T>
-                    : GetDemoOrders(predicate.Compile() as Func<OrderModel, bool>) as IEnumerable<T>;
-            }
+            return DemoGet(predicate);
             throw new NotImplementedException();
         }
 
         /// <inheritdoc />
-        public T Save<T>(T value)
+        public T Save<T>(T value) where T : class
         {
+            return DemoSave(value);
             throw new NotImplementedException();
         }
 
@@ -42,9 +31,58 @@ namespace CheckoutOrderService.Dependencies
             throw new NotImplementedException();
         }
 
+        #region Demo Implementation // TODO Remove the Demo implementation when the real repository is wired up. 
+
         /// <summary>
-        /// Need hard coded data for demo
-        /// TODO Remove when repository is wired up
+        /// Hard coded path for Demo implementation of <see cref="Repository"/>
+        /// </summary>
+        private readonly string path = $"{Environment.CurrentDirectory}\\Resources\\DemoData.json";
+
+        /// <summary>
+        /// Demo implementation of the <see cref="Repository"/> <see cref="IRepository.Get"/> method
+        /// </summary>
+        private IEnumerable<T> DemoGet<T>(Expression<Func<T, bool>> predicate)
+        {
+            if (typeof(T) == typeof(SkuModel))
+            {
+                return predicate == null
+                    ? GetDemoSkus() as IEnumerable<T>
+                    : GetDemoSkus(predicate.Compile() as Func<SkuModel, bool>) as IEnumerable<T>;
+            }
+            if (typeof(T) == typeof(OrderModel))
+            {
+                return predicate == null
+                    ? GetDemoOrders() as IEnumerable<T>
+                    : GetDemoOrders(predicate.Compile() as Func<OrderModel, bool>) as IEnumerable<T>;
+            }
+            return new T[0];
+        }
+
+        /// <summary>
+        /// Demo implementation of the <see cref="Repository"/> <see cref="IRepository.Save"/> method
+        /// </summary>
+        private T DemoSave<T>(T value) where T : class
+        {
+            if (typeof(T) == typeof(OrderModel))
+            {
+                var order = value as OrderModel;
+                var orders = GetDemoOrders();
+                orders = UpdateOrderLineIds(orders, order);
+                if (orders.All(o => o.Id != order.Id))
+                {
+                    var maxOrderId = orders.Select(o => o.Id).Max();
+                    order = new OrderModel(++maxOrderId) { Lines = order.Lines };
+                    orders = orders.Concat(new[] { order }).ToArray();
+                }
+                // Assumption: directory and file already exist
+                File.WriteAllText(path, JsonConvert.SerializeObject(orders));
+                return order as T;
+            }
+            return default(T);
+        }
+
+        /// <summary>
+        /// Hard coded <see cref="SkuModel"/> data for demo
         /// </summary>        
         private SkuModel[] GetDemoSkus()
         {
@@ -57,9 +95,16 @@ namespace CheckoutOrderService.Dependencies
             };
         }
 
-         /// <summary>
-        /// Need hard coded data for demo
-        /// TODO Remove when repository is wired up. 
+        /// <summary>
+        /// Demo implementation of the <see cref="Repository"/> <see cref="IRepository.Get"/> method for <see cref="SkuModel"/>s
+        /// </summary>
+        private SkuModel[] GetDemoSkus(Func<SkuModel, bool> func)
+        {
+            return GetDemoSkus().Where(func).ToArray();
+        }
+
+        /// <summary>
+        /// Hard coded <see cref="OrderModel"/> data for demo
         /// This will break a test which should be removed along with an update to <see cref="SkuModel"/>
         /// </summary>  
         private OrderModel[] GetNewDemoOrders()
@@ -85,9 +130,8 @@ namespace CheckoutOrderService.Dependencies
         }
 
         /// <summary>
-        /// A json file based implementation of IRepository
+        /// Demo implementation of the <see cref="Repository"/> <see cref="IRepository.Get"/> method for <see cref="OrderModel"/>s
         /// </summary>
-        /// <returns></returns>
         private OrderModel[] GetDemoOrders()
         {
             if (!File.Exists(path))
@@ -106,10 +150,51 @@ namespace CheckoutOrderService.Dependencies
             }
         }
 
+        /// <summary>
+        /// Demo implementation of the <see cref="Repository"/> <see cref="IRepository.Get"/> method for <see cref="OrderModel"/>s with predicate
+        /// </summary>
         private OrderModel[] GetDemoOrders(Func<OrderModel, bool> func)
         {
             return GetDemoOrders().Where(func).ToArray();
         }
+
+        /// <summary>
+        /// Spoofs Identifier updates for the <see cref="OrderLineModel"/>s in the supplied <see cref="OrderModel"/> in a way that is consistent with an relational database
+        /// </summary>
+        private OrderModel[] UpdateOrderLineIds(OrderModel[] orders, OrderModel order)
+        {
+            var maxLineId = orders.SelectMany(o => o.Lines.Select(line => line.Id)).Max();
+            var repoLines = order.Lines.Select(line =>
+                line.Id != 0 ? line
+                : new OrderLineModel(++maxLineId, GetDemoSkus().Where(sku => sku.Id == line.Sku.Id).FirstOrDefault())
+                {
+                    Quantity = line.Quantity,
+                    SortOrder = line.SortOrder == 0 ? order.Lines.Select(l => l.SortOrder).Max() + 10 : line.SortOrder
+                }).ToList();
+            order.Lines = repoLines;
+            return orders.Replace(order, o => o.Id == order.Id).ToArray();
+        }
     }
 
+    /// <summary>
+    /// Provides extensions to System.Linq
+    /// TODO move this to a utils or common project if we keep this after the repository is wired up
+    /// </summary>
+    public static class LinqExtensions
+    {
+        /// <summary>
+        /// Replaces all objects that match the supplied predicate with the supplied object
+        /// </summary>
+        public static IEnumerable<T> Replace<T>(this IEnumerable<T> sequence, T replace, Expression<Func<T, bool>> predicate)
+        {
+            var func = predicate.Compile();
+            foreach (T item in sequence)
+            {
+                T value = func(item) ? replace : item;
+                yield return value;
+            }
+        }
+    }
+
+    #endregion Demo Implementation
 }

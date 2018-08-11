@@ -18,7 +18,7 @@ namespace CheckoutOrderService.Dependencies
         /// Saves the supplied value to our persistence layer
         /// </summary>
         /// <returns>The saved object with updated identifier if new</returns>
-        T Save<T>(T value);
+        T Save<T>(T value) where T : class; 
 
         /// <summary>
         /// Deletes a single object from our persistence layer using the supplied identifier
