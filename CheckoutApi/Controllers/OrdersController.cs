@@ -53,7 +53,7 @@ namespace CheckoutApi.Controllers
             return Ok(order);
         }
 
-        [HttpPost("{orderId}", Name = "CreateOrder")]
+        [HttpPost(Name = "CreateOrder")]
         public IActionResult Create(Order order)
         {
             var result = _orderValidator.Validate(order);
