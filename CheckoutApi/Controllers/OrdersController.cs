@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using CheckoutApi.Models;
 using CheckoutOrderService;
 using CheckoutOrderService.Common;
 using CheckoutOrderService.Models;
@@ -7,13 +6,11 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Net;
-//using System.Web.Http.Cors;
 
 namespace CheckoutApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[EnableCors(origins: "http://localhost:45000/orders.html", headers: "*", methods: "*")]
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -57,7 +54,7 @@ namespace CheckoutApi.Controllers
         public IActionResult Create(Order order)
         {
             var result = _orderValidator.Validate(order);
-            if(!result.IsValid)
+            if (!result.IsValid)
             {
                 return BadRequest(string.Join(", ", result.Errors));
             }
@@ -94,7 +91,7 @@ namespace CheckoutApi.Controllers
             }
             var model = _mapper.Map<OrderLine, OrderLineModel>(orderLine);
             var response = _orderService.UpdateOrderLine(orderId, model);
-            if(!response.IsSuccessful)
+            if (!response.IsSuccessful)
             {
                 return ProcessServiceFailure(response);
             }
@@ -108,7 +105,7 @@ namespace CheckoutApi.Controllers
         /// </summary>
         private IActionResult ProcessServiceFailure(ServiceResponse response)
         {
-            switch(response.ServiceError)
+            switch (response.ServiceError)
             {
                 case ServiceError.NotFound:
                     return NotFound(string.Join(", ", response.ErrorMessages));

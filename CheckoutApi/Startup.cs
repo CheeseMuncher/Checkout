@@ -13,7 +13,6 @@ using Ninject.Activation;
 using Ninject.Infrastructure.Disposal;
 using System;
 using System.Threading;
-//using System.Web.Http;
 
 namespace CheckoutApi
 {
@@ -35,8 +34,8 @@ namespace CheckoutApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddRequestScopingMiddleware(() => scopeProvider.Value = new Scope());
             services.AddCustomControllerActivation(Resolve);
@@ -46,6 +45,7 @@ namespace CheckoutApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            app.UseCors(options => options.WithOrigins("http://localhost:45000/*").AllowAnyMethod());
             Kernel = RegisterApplicationComponents(app, loggerFactory);
 
             if (env.IsDevelopment())
@@ -83,19 +83,6 @@ namespace CheckoutApi
 
         private sealed class Scope : DisposableObject { }
 
-    //    public static class WebApiConfig
-    //    {
-    //        public static void Register(HttpConfiguration config)
-    //        {
-    //            // New code
-    //            config.EnableCors();
-
-    //            config.Routes.MapHttpRoute(
-    //                name: "DefaultApi",
-    //                routeTemplate: "api/{controller}/{id}",
-    //                defaults: new { id = RouteParameter.Optional }
-    //            );
-    //        }
-    //    }
     }
+
 }
