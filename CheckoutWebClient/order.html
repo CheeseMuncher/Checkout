@@ -5,7 +5,9 @@
     </head>
     <body>
         <div id="skus">
-            {{ message }}<br/>
+            <div class="error">
+                {{ message }}
+            </div>
             Add new SKU to order: 
             <select v-model="selectedSku" id="skuList" >
                 <option v-for="sku in availableSkus" v-bind:value="sku">
@@ -17,7 +19,9 @@
         <div id="order">
             Order# {{ orderId }}:
             <button v-on:click="clearOrder">Clear All Lines</button>
-            {{ message }}<br/>
+            <div class="error">
+                {{ message }}
+            </div>
             <table>
                 <template v-for="line in orderBy(lines, 'sortOrder')">
                     <tr>
@@ -108,11 +112,13 @@
                     vm.message = "Order already contains a line with this product";
                 }
                 else {
+                    vm.message = "";
                     axios
                     .put("https://localhost:44315/api/orders/" + vm.orderId, {
                             "quantity": 1,
                             "skuCode": payload.code
                     }).then(response => {
+                        vm.message = "";
                         var max = function(lines){
                             return Math.max(...lines.map(line => line.sortOrder))
                         }
@@ -135,6 +141,7 @@
                 axios
                 .get("https://localhost:44315/api/orders/" + this.orderId)
                 .then(response => {
+                    vm.message = "";
                     this.lines = response.data.lines;
                 })
                 .catch(function (error) {
@@ -145,6 +152,7 @@
         },
         methods : {
             updateQuantity : function(line){
+                this.message = "";
                 axios // TODO avoid invoking the server if button clicked but value hasn't changed
                 .put("https://localhost:44315/api/orders/" + this.orderId, {
                         "id": line.id,
@@ -157,6 +165,7 @@
                 })
             },
             clearLine : function(line){
+                this.message = "";
                 axios
                 .delete("https://localhost:44315/api/orders/" + this.orderId + "?orderLineId=" + line.id)
                 .then(response => {
@@ -169,6 +178,7 @@
                 })
             },
             clearOrder : function(){
+                this.message = "";
                 axios
                 .delete("https://localhost:44315/api/orders/" + this.orderId)
                 .then(response => {

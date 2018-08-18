@@ -1,7 +1,7 @@
 <html>
   <head>
     <title>Checkout</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" type="text/css">
   </head>
   <body>
     <div>
@@ -11,8 +11,9 @@
         Password
         <input v-model="password" placeholder="enter your password" type="password" />
         <button v-on:click="checkPassword" class="button">Login</button>
-        <br/>
-        {{ message }}
+        <div class="error">
+            {{ message }}
+        </div>
     </div>
 
     <script src="https://unpkg.com/vue@2.2.5/dist/vue.js" type="text/javascript"></script>
