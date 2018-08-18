@@ -9,7 +9,12 @@ using System.Net;
 
 namespace CheckoutApi.Controllers
 {
+    /// <summary>
+    /// Operations relating to Orders
+    /// </summary>
     [Route("api/[controller]")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
     [ApiController]
     public class OrdersController : ControllerBase
     {
@@ -26,7 +31,12 @@ namespace CheckoutApi.Controllers
             _orderLineValidator = orderLineValidator;
         }
 
+        /// <summary>
+        /// Get All Orders
+        /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<Order>), 200)]
+        [ProducesResponseType(500)]
         public ActionResult<IEnumerable<Order>> Get()
         {
             var response = _orderService.GetOrders();
@@ -38,7 +48,13 @@ namespace CheckoutApi.Controllers
             return Ok(orders);
         }
 
+        /// <summary>
+        /// Gets the order corresponding to the supplied id
+        /// </summary>
         [HttpGet("{orderId}", Name = "GetOrder")]
+        [ProducesResponseType(typeof(Order), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public ActionResult<Order> Get(int orderId)
         {
             var response = _orderService.GetOrder(orderId);
@@ -50,8 +66,15 @@ namespace CheckoutApi.Controllers
             return Ok(order);
         }
 
+        /// <summary>
+        /// Creates an order
+        /// </summary>
+        /// <returns>The identifier for the newly created order</returns>
         [HttpPost(Name = "CreateOrder")]
-        public IActionResult Create(Order order)
+        [ProducesResponseType(typeof(int), 201)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public IActionResult Create([FromBody]Order order)
         {
             var result = _orderValidator.Validate(order);
             if (!result.IsValid)
@@ -67,7 +90,16 @@ namespace CheckoutApi.Controllers
             return Created($"GetOrder/{response.Data}", $"{response.Data}");
         }
 
+        /// <summary>
+        /// Deletes individual order lines or clears an entire order of all lines
+        /// </summary>
+        /// <param name="orderId">The identifier of the order to modify</param>
+        /// <param name="orderLineId">The identifier of the order line to remove</param>
         [HttpDelete("{orderId}", Name = "ClearOrder")]
+        [ProducesResponseType(typeof(Order), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public IActionResult Clear(int orderId, [FromQuery]int? orderLineId)
         {
             var response = orderLineId.HasValue
@@ -81,8 +113,19 @@ namespace CheckoutApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Updates the order with the supplied order id
+        /// Adds or updates the supplied order line object 
+        /// </summary>
+        /// <param name="orderId">The identifier of the order to modify</param>
+        /// <param name="orderLine">The order line to add or update</param>
+        /// <returns>The identifier for the updated or newly created order line</returns>
         [HttpPut("{orderId}", Name = "UpdateOrderLine")]
-        public IActionResult Update(int orderId, OrderLine orderLine)
+        [ProducesResponseType(typeof(Order), 201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public IActionResult Update(int orderId, [FromBody]OrderLine orderLine)
         {
             var result = _orderLineValidator.Validate(orderLine);
             if (!result.IsValid)
@@ -95,7 +138,7 @@ namespace CheckoutApi.Controllers
             {
                 return ProcessServiceFailure(response);
             }
-            // TODO update location if we create an Order Getter
+            // TODO update location if we create an Order Line Getter
             return Created(string.Empty, $"{response.Data}");
         }
 

@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace CheckoutApi.Validation
 {
+    /// <summary>
+    /// Basic validation of <see cref="Order"/> objects
+    /// </summary>
     public class OrderValidator : AbstractValidator<Order>
     {
         /// <summary>
@@ -28,6 +31,9 @@ namespace CheckoutApi.Validation
         }
     }
 
+    /// <summary>
+    /// Basic validation of <see cref="OrderLine"/> objects
+    /// </summary>
     public class OrderLineValidator : AbstractValidator<OrderLine>
     {
         /// <summary>

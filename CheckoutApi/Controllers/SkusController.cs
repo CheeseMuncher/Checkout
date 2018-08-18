@@ -8,7 +8,11 @@ using System.Net;
 
 namespace CheckoutApi.Controllers
 {
+    /// <summary>
+    /// Operations relating to Skus
+    /// </summary>
     [Route("api/[controller]")]
+    [Produces("application/json")]
     [ApiController]
     public class SkusController : ControllerBase
     {
@@ -21,8 +25,13 @@ namespace CheckoutApi.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Provides a collection of Skus definitions used to build orders 
+        /// </summary>
         [HttpGet(Name = "GetSkus")]
-        public ActionResult<IEnumerable<SkuModel>> GetSkus()
+        [ProducesResponseType(typeof(IEnumerable<Sku>), 200)]
+        [ProducesResponseType(500)]
+        public ActionResult<IEnumerable<Sku>> GetSkus()
         {
             var response = _orderService.GetSkus();
             if (!response.IsSuccessful)

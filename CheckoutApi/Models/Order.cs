@@ -7,7 +7,14 @@ namespace CheckoutOrderService.Models
     /// </summary>
     public class Order
     {
+        /// <summary>
+        /// The identifer of the order
+        /// </summary>
         public int Id { get; set; }
+
+        /// <summary>
+        /// The collection of order lines
+        /// </summary>
         public List<OrderLine> Lines { get; set; }
     }
 }

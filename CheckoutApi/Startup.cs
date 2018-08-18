@@ -11,7 +11,10 @@ using Microsoft.Extensions.Logging;
 using Ninject;
 using Ninject.Activation;
 using Ninject.Infrastructure.Disposal;
+using Swashbuckle.AspNetCore.Swagger;
 using System;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 
 namespace CheckoutApi
@@ -40,13 +43,31 @@ namespace CheckoutApi
             services.AddRequestScopingMiddleware(() => scopeProvider.Value = new Scope());
             services.AddCustomControllerActivation(Resolve);
             services.AddCustomViewComponentActivation(Resolve);
+            services.AddSwaggerGen(config =>
+            {
+                config.SwaggerDoc("prototype", new Info
+                {
+                    Title = "Checkout Order API",
+                    Description = "The prototype Checkout Order API"                    
+                });
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                config.IncludeXmlComments(xmlPath);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            // Cors Setup
             app.UseCors(options => options.WithOrigins("http://localhost:45000/*").AllowAnyMethod());
+
+            // DI setup
             Kernel = RegisterApplicationComponents(app, loggerFactory);
+
+            // Swagger docs setup
+            app.UseSwagger();
+            app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/prototype/swagger.json", "Checkout Order API"); });
 
             if (env.IsDevelopment())
             {
@@ -82,7 +103,5 @@ namespace CheckoutApi
         }
 
         private sealed class Scope : DisposableObject { }
-
     }
-
 }
