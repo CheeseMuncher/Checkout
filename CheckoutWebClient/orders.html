@@ -11,6 +11,8 @@
             <li v-for="(item, index) in myOrders">
                 Order Id: {{ item.id }} <button v-on:click="getOrder(item.id)">Select</button>
             </li>
+            <br/>
+            <button v-on:click="newOrder">Create New Order</button>
         </div>
     </body>
 </html>
@@ -41,6 +43,22 @@
                 this.message = "Fetching order with Id " + id;
                 window.location.href = "order.html?id=" + id 
             },
+            newOrder: function(){
+                var vm = this;
+                vm.message = "Creating order...";
+                axios
+                .post("https://localhost:44315/api/orders/", {
+                        "id": 0,
+                        "lines": []
+                })
+                .then(response => {                    
+                    window.location.href = "order.html?id=" + response.data
+                })
+                .catch(function (error) {
+                    console.log(error.message);
+                    vm.message = error.response.request.statusText;
+                })
+            }
         }
     });
 </script>
