@@ -1,15 +1,16 @@
 <html>
   <head>
     <title>Checkout</title>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <div>
-        Please login to the Checkout.com order prototype        
+        Please login to the Checkout.com order prototype 
     </div>
     <div id="login">
         Password
-        <input v-model="password" placeholder="password" type="password" />
-        <button v-on:click="checkPassword">Login</button>
+        <input v-model="password" placeholder="enter your password" type="password" />
+        <button v-on:click="checkPassword" class="button">Login</button>
         <br/>
         {{ message }}
     </div>

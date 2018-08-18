@@ -1,0 +1,19 @@
+body{
+    color: rgb(1, 58, 81);
+    font-size: 11pt;
+    font-family: "Segoe UI";
+}
+
+button{
+    height: 24px;
+    background-color: rgb(0, 229, 158);
+    color: rgb(1, 58, 81);
+    font-size: 11pt;
+    font-family: "Segoe UI";
+    align-self: auto;
+    min-width: 100px;
+    z-index: 1;
+    border-radius: 12px;
+    border-width: 0px;
+    margin: 1px;
+}

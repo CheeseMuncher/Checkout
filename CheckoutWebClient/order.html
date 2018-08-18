@@ -1,6 +1,7 @@
 <html>
     <head>
         <title>Order Editor</title>
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
         <div id="skus">
@@ -53,8 +54,13 @@
             }
         },
         mounted(){
+            var header = {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
+                'Content-Type': 'application/json',
+            }
             axios
-            .get('https://localhost:44315/api/skus')
+            .get('https://localhost:44315/api/skus', { crossdomain: true })
             .then(response => {
                 this.availableSkus = response.data;
                 if(this.availableSkus.length > 0)
