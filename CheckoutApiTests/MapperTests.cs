@@ -60,7 +60,7 @@ namespace CheckoutApiTests
         public void OrderMapper_Outbound_MapsPropertiesFromServiceOrderModelByName()
         {
             // Arrange
-            var serviceModel = new OrderModel { Id = 2 };
+            var serviceModel = new OrderModel(2);
 
             // Act
             var result = _target.Map<OrderModel, Order>(serviceModel);
@@ -74,7 +74,7 @@ namespace CheckoutApiTests
         {
             // Arrange
             var serviceLineModel = new OrderLineModel(2, new SkuModel(string.Empty, string.Empty));
-            var serviceOrderModel = new OrderModel { Lines = new List<OrderLineModel> { serviceLineModel } };
+            var serviceOrderModel = new OrderModel(0) { Lines = new List<OrderLineModel> { serviceLineModel } };
 
             // Act
             var result = _target.Map<OrderModel, Order>(serviceOrderModel);
@@ -90,7 +90,7 @@ namespace CheckoutApiTests
             // Arrange
             var serviceLineModel1 = new OrderLineModel(1, new SkuModel(string.Empty, string.Empty));
             var serviceLineModel2 = new OrderLineModel(2, new SkuModel(string.Empty, string.Empty));
-            var serviceOrderModel = new OrderModel { Lines = new List<OrderLineModel> { serviceLineModel1, serviceLineModel2 } };
+            var serviceOrderModel = new OrderModel(0) { Lines = new List<OrderLineModel> { serviceLineModel1, serviceLineModel2 } };
 
             // Act
             var result = _target.Map<OrderModel, Order>(serviceOrderModel);

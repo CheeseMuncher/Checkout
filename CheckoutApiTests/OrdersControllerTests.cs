@@ -78,7 +78,7 @@ namespace CheckoutApiTests
         public void GetOrders_InvokesMapperWithServiceResult()
         {
             // Arrange
-            var order = new OrderModel { Id = orderId };
+            var order = new OrderModel(orderId);
             _mockOrderService
                 .Setup(service => service.GetOrders())
                 .Returns(new ServiceResponse<IEnumerable<OrderModel>>(new[] { order }));
@@ -182,7 +182,7 @@ namespace CheckoutApiTests
         public void GetOrder_InvokesMapperWithServiceResult()
         {
             // Arrange
-            var order = new OrderModel { Id = orderId };
+            var order = new OrderModel(orderId);
             _mockOrderService
                 .Setup(service => service.GetOrder(It.IsAny<int>()))
                 .Returns(new ServiceResponse<OrderModel>(order));
@@ -293,7 +293,7 @@ namespace CheckoutApiTests
 
             _mockOrderMapper
                 .Setup(mapper => mapper.Map<Order, OrderModel>(It.IsAny<Order>()))
-                .Returns(new OrderModel { Id = orderId });
+                .Returns(new OrderModel(orderId));
 
             OrderModel model = null;
             _mockOrderService
