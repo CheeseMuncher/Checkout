@@ -46,23 +46,9 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/vue@2.2.5/dist/vue.js" type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue2-filters/dist/vue2-filters.min.js"></script>
+<script type="text/javascript" src="retry.js"></script>
 <script type="text/javascript">
     Vue.prototype.$eventHub = new Vue(); // Global event bus
-    var retries = 0;
-    axios.interceptors.response.use(
-        response => response,
-        (error) => {
-            if (retries < 3) {
-                const originalRequest = error.config
-                retries++;
-                return axios(originalRequest)
-            }
-            else{
-                retries = 0;
-                return Promise.reject(error)
-            }
-        }
-    )
     new Vue({
         el: '#skus',
         data () {                
