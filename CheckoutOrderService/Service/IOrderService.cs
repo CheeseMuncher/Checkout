@@ -37,7 +37,7 @@ namespace CheckoutOrderService
         ServiceResponse ClearOrder(int id);
 
         /// <summary>
-        /// Adds or updates the supplied <see cref="OrderLineModel"/> object to the order corresponding to the supplied order Id 
+        /// Adds or updates the supplied <see cref="OrderLineModel"/> object on the order corresponding to the supplied order Id 
         /// </summary>
         /// <returns>The persistence identifier for the line</returns>
         ServiceResponse<int> UpdateOrderLine(int orderId, OrderLineModel line);
