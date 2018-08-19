@@ -8,7 +8,7 @@ namespace CheckoutOrderService.Dependencies
         /// <inheritdoc />
         public void LogError(string message)
         {
-            throw new NotImplementedException();
+            return;
         }
     }
 }
