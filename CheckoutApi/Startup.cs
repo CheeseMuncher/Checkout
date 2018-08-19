@@ -60,7 +60,7 @@ namespace CheckoutApi
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             // Cors Setup
-            app.UseCors(options => options.WithOrigins("http://localhost:45000/*").AllowAnyMethod());
+            app.UseCors(options => options.WithOrigins("http://localhost:45000").AllowAnyMethod().AllowAnyHeader());
 
             // DI setup
             Kernel = RegisterApplicationComponents(app, loggerFactory);
