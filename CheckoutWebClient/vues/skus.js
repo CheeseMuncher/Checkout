@@ -1,3 +1,6 @@
+import constants from '/config.js';
+let skus_endpoint = constants.skus_endpoint;
+
 Vue.prototype.$eventHub = new Vue(); // Global event bus
 new Vue({
     el: '#skus',
@@ -9,13 +12,8 @@ new Vue({
         }
     },
     mounted(){
-        var header = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
-            'Content-Type': 'application/json',
-        }
         axios
-        .get('https://localhost:44315/api/skus', { crossdomain: true })
+        .get(skus_endpoint)
         .then(response => {
             this.availableSkus = response.data;
             if(this.availableSkus.length > 0)

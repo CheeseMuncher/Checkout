@@ -1,3 +1,6 @@
+import constants from '/config.js';
+let orders_endpoint = constants.orders_endpoint;
+
 new Vue({
     el: '#orders',
     data () {                
@@ -8,15 +11,16 @@ new Vue({
         }
     },
     mounted () {
+        var vm = this;
         axios
-        .get('https://localhost:44315/api/orders')
+        .get(orders_endpoint)
         .then(response => {
             this.myOrders = response.data;
         })
         .catch(function (error) {
-            this.error = true;
+            vm.error = true;
             console.log(error.message);
-            this.message = error.message
+            vm.message = error.message
         })
     },
     methods : {
@@ -30,7 +34,7 @@ new Vue({
             vm.error = false;
             vm.message = "Creating order...";
             axios
-            .post("https://localhost:44315/api/orders/", {
+            .post(orders_endpoint, {
                     "id": 0,
                     "lines": []
             })

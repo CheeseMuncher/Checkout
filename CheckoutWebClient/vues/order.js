@@ -1,3 +1,6 @@
+import constants from '/config.js';
+let orders_endpoint = constants.orders_endpoint;
+
 new Vue({
     el: '#order',
     data () {                
@@ -29,9 +32,9 @@ new Vue({
             else {
                 vm.message = "";
                 axios
-                .put("https://localhost:44315/api/orders/" + vm.orderId, {
-                        "quantity": 1,
-                        "skuCode": payload.code
+                .put(orders_endpoint + vm.orderId, {
+                    "quantity": 1,
+                    "skuCode": payload.code
                 }).then(response => {
                     vm.message = "";
                     var max = function(lines){
@@ -54,7 +57,7 @@ new Vue({
         });            
         if (this.orderId != null) {
             axios
-            .get("https://localhost:44315/api/orders/" + this.orderId)
+            .get(orders_endpoint + this.orderId)
             .then(response => {
                 vm.message = "";
                 this.lines = response.data.lines;
@@ -69,10 +72,10 @@ new Vue({
         updateQuantity : function(line){
             this.message = "";
             axios // TODO avoid invoking the server if button clicked but value hasn't changed
-            .put("https://localhost:44315/api/orders/" + this.orderId, {
-                    "id": line.id,
-                    "quantity": line.quantity,
-                    "skuCode": line.skuCode
+            .put(orders_endpoint + this.orderId, {
+                "id": line.id,
+                "quantity": line.quantity,
+                "skuCode": line.skuCode
             }).then(response => { })
             .catch(function (error) {
                 console.log(error.message);
@@ -82,7 +85,7 @@ new Vue({
         clearLine : function(line){
             this.message = "";
             axios
-            .delete("https://localhost:44315/api/orders/" + this.orderId + "?orderLineId=" + line.id)
+            .delete(orders_endpoint + this.orderId + "?orderLineId=" + line.id)
             .then(response => {
                 index = this.lines.findIndex(l => l.skuCode === line.skuCode);
                 this.lines.splice(index, 1);
@@ -95,7 +98,7 @@ new Vue({
         clearOrder : function(){
             this.message = "";
             axios
-            .delete("https://localhost:44315/api/orders/" + this.orderId)
+            .delete(orders_endpoint + this.orderId)
             .then(response => {
                 this.lines = [];
              })
