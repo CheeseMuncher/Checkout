@@ -70,12 +70,16 @@ new Vue({
     },
     methods : {
         updateQuantity : function(line){
+            if(isNaN(line.quantity)){
+                this.message = "Quantity must be a number";
+                return;
+            }
             this.message = "";
             axios // TODO avoid invoking the server if button clicked but value hasn't changed
             .put(orders_endpoint + this.orderId, {
-                "id": line.id,
-                "quantity": line.quantity,
-                "skuCode": line.skuCode
+                    "id": line.id,
+                    "quantity": line.quantity,
+                    "skuCode": line.skuCode
             }).then(response => { })
             .catch(function (error) {
                 console.log(error.message);
